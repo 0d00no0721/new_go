@@ -35,6 +35,10 @@
 - `cl` / `cmake` **不在全局 PATH**——`build_opencl.ps1` 内部经 `vcvars64.bat` 注入环境；在普通终端 `cl`/`cmake` 会 "not recognized"，属正常
 - 产物：`dist_opencl\katago.exe` + `OpenCL.dll` + `z.dll`
 - `katago-src/` 是 shallow clone 且已 `.gitignore`，**勿提交**
+- INFRA 已完成并 benchmark 验证：RTX 5060 OpenCL，20 线程 **429 visits/s**（MSVC 19.44 / CMake 3.31 / Win SDK 26100）
+- 建议 `numSearchThreads` 调到 **20**（默认 6 偏低），在 config 或 `--extra-config` 中设
+- 首次启动 OpenCL autotuning ~2 分钟，缓存于 `dist_opencl\KataGoData\opencltuning\`；FE 的 `gtp_override.cfg` 设 `homeDataDir=E:/katago_cache` 也可缓存 tuner，后续启动 <10s
+- 构建中间目录 `E:\katabuild\`（英文路径，规避中文路径致 vcpkg 子进程失败）
 
 ## KataGo 改造要点（详见 `Agent 2 — ENGINE.md`）
 
@@ -50,6 +54,8 @@
 | 20 路网络 | `gtpForceMaxNNSize=true`（19 路网络自动 pad 到 MAX_LEN，无需改码） |
 
 > 注意：`analysis.cpp:916` 仍校验半整数，4.25 在 analysis 模式被拒——首期仅支持 GTP 对弈，analysis 模式二期处理。
+
+> ENGINE 现已解阻塞（INFRA 交付工具链），可开始 WP2/WP3 编码并用 `build_opencl.ps1` 编译验证。
 
 ## 测试
 
@@ -68,7 +74,10 @@ $env:PYTHONIOENCODING='utf-8'; python -m pytest test_ban.py -q
 | 原 KataGo 整合包 | `E:\2026-01-07-win64-KataGo\` |
 | 权重 | `E:\2026-01-07-win64-KataGo\weights\28b.bin.gz` |
 | 引擎配置 | `E:\2026-01-07-win64-KataGo\katago_configs\default_gtp.cfg` |
-| vcpkg | `E:\vcpkg` |
+| vcpkg | `E:\vcpkg`（已装 `opencl` / `zlib`） |
+| 工具链 | VS 2022 BuildTools（MSVC 19.44 + CMake 3.31 + Win SDK 26100） |
+| 构建中间目录 | `E:\katabuild\`（英文路径） |
+| OpenCL tuner 缓存 | `dist_opencl\KataGoData\opencltuning\` 或 `E:\katago_cache\`（经 `gtp_override.cfg`） |
 
 ## 目录速查
 
@@ -76,9 +85,10 @@ $env:PYTHONIOENCODING='utf-8'; python -m pytest test_ban.py -q
 |------|------|
 | `katago-src/` | KataGo 源码（gitignored） |
 | `dist_opencl/` | 编译产物（gitignored） |
-| `ban_controller.py` | Ban 阶段控制器（RULES 交付，397 行） |
+| `ban_controller.py` | Ban 阶段控制器（RULES 交付，397 行，36 测试全过） |
 | `test_ban.py` | 控制器测试（36 用例） |
-| `cli_player.py` | CLI 对弈工具（FE，开发中） |
-| `build_opencl.ps1` | 编译脚本（INFRA） |
+| `cli_player.py` | CLI 对弈工具（FE 第一阶段完成，591 行；19 路框架已跑通，komi4.25/bans/数子为占位待 ENGINE） |
+| `gtp_override.cfg` | FE 附加 GTP 配置（`homeDataDir` 缓存 OpenCL tuner） |
+| `build_opencl.ps1` | 编译脚本（INFRA 完成，benchmark 验证通过） |
 | `进度总览.md` | 全局进度（PM 维护，入手先读） |
 | `Agent N — *.md` | 各 agent 反馈文档 |
