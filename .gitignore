@@ -1,0 +1,44 @@
+# 编译产物
+*.exe
+*.dll
+*.obj
+*.o
+*.lib
+*.pdb
+*.exp
+
+# 构建目录
+build/
+cmake-build-*/
+katago-src/
+compile-build/
+
+# KataGo 运行时产物
+KataGoData/
+*.bin.gz
+*.bin
+*.sgf
+*.log
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# 临时文件
+*.tmp
+*.bak
