@@ -15,10 +15,13 @@
 | 2026-08-08 | ✅ DONE | 源码克隆 | 克隆 KataGo v1.16.4 (commit 4b8de63) 到 `katago-src/` |
 | 2026-08-08 | ✅ DONE | 源码通读 | 通读 Board/Rules/BoardHistory/NNPos/GTP 核心，定位全部改动点 |
 | 2026-08-08 | ✅ DONE | 改动方案 | WP2+WP3 改动方案定稿（见 §3、§4） |
-| 2026-08-08 | 🚫 BLOCKED | WP2 编码 | 等待 INFRA 完成 WP1（本机无 cmake/cl，无法编译验证） |
-| 2026-08-08 | 🚫 BLOCKED | WP3 编码 | 同上，编译就绪后立即开工 |
+| 2026-08-08 | ✅ DONE | WP2 编码 | MAX_LEN 19→25 + komi override 验证（无源码改码，纯配置） |
+| 2026-08-08 | ✅ DONE | WP3 编码 | banned_points + C_WALL 机制 + 数子修复 + NN输入修复 + 3 GTP命令 |
+| 2026-08-08 | ✅ DONE | checkConsistency 修复 | 放宽断言允许 C_WALL 在棋盘内（banned 点），补 pos_hash 计算 |
+| 2026-08-08 | ✅ DONE | 编译验证 | `build_opencl.ps1` 增量编译成功，无错误 |
+| 2026-08-08 | ✅ DONE | 冒烟测试 | G1/G2/B1/F1 全部通过（见 §7） |
 
-> **当前阻塞**：本机仅有 git，无 cmake/MSVC。源码分析、方案、代码草稿可先行，但**编译验证需 INFRA 交付工具链**。INFRA 就绪后预计 1-2 天内完成 WP2+WP3 编码与验证。
+> **WP2+WP3 完成**。4 文件 ~90 行改动 + checkConsistency 修复（方案外发现）。编译通过，冒烟测试全绿。
 
 ---
 
@@ -27,10 +30,11 @@
 | 文件 | 说明 | 状态 |
 |------|------|------|
 | `katago-src/` | KataGo v1.16.4 源码（INFRA 原应拉取，ENGINE 已自行克隆备用） | ✅ 就位 |
-| `katago-src/cpp/game/board.h` | MAX_LEN 调大 + banned_points 数据结构 | ⏳ 待编码 |
-| `katago-src/cpp/game/board.cpp` | 禁点方法 + 数子修复 | ⏳ 待编码 |
-| `katago-src/cpp/neuralnet/nninputs.cpp` | NN 输入 feature 0 修复（banned=off-board） | ⏳ 待编码 |
-| `katago-src/cpp/command/gtp.cpp` | 3 个新 GTP 命令 | ⏳ 待编码 |
+| `katago-src/cpp/game/board.h` | MAX_LEN 19→25 + banned_points set + 4 方法声明 | ✅ 完成 |
+| `katago-src/cpp/game/board.cpp` | 4 方法实现 + 数子修复 + checkConsistency 修复 | ✅ 完成 |
+| `katago-src/cpp/neuralnet/nninputs.cpp` | NN 输入 feature 0 修复（banned=off-board，5 处） | ✅ 完成 |
+| `katago-src/cpp/command/gtp.cpp` | 3 个新 GTP 命令 + GTPEngine setBans/clearBans 方法 | ✅ 完成 |
+| `dist_opencl/katago.exe` | 编译产物（v1.16.4 OpenCL，含禁点支持） | ✅ 已更新 |
 
 ---
 
@@ -42,7 +46,7 @@
 - [x] 排查 MAX_LEN 依赖的数组/模板，同步扩展（均用 MAX_ARR_SIZE，自动扩展）
 - [x] 校验 NNPos / 网络棋盘上限，确认 20 路可用（方案：gtpForceMaxNNSize=true）
 - [x] komi 4.25 注入（方案：ignoreGTPAndForceKomi=4.25，无需改码）
-- [ ] 20×20 × chinese 规则冒烟测试（需编译）
+- [x] 20×20 × chinese 规则冒烟测试
 
 ### 2.2 WP3 — 禁点规则引擎
 
@@ -52,15 +56,16 @@
 - [x] 提子 / 禁自杀 / 劫争方案（C_WALL 天然正确，零改动）
 - [x] 数子方案（calculateArea/IndependentLifeArea 两处 +1 条件）
 - [x] NN 输入方案（fillRowV3-V7 feature 0 修复）
-- [ ] 禁点数据结构（编码）
-- [ ] 落子合法性（编码 — 预期零改动，编译后验证）
-- [ ] 气计算（编码 — 预期零改动，编译后验证）
-- [ ] 提子 / 禁自杀 / 劫争（编码 — 预期零改动，编译后验证）
-- [ ] 数子（编码）
-- [ ] 新 GTP 命令：`kata-set-bans`（编码）
-- [ ] 新 GTP 命令：`kata-clear-bans`（编码）
-- [ ] 新 GTP 命令：`kata-query-bans`（编码）
-- [ ] 单元用例（气/提/劫/数子边界）（编码）
+- [x] 禁点数据结构（编码）
+- [x] 落子合法性（编码 — C_WALL 天然非法，编译后验证通过）
+- [x] 气计算（编码 — C_WALL 天然不供气，编译后验证通过）
+- [x] 提子 / 禁自杀 / 劫争（编码 — C_WALL 天然正确，编译后验证通过）
+- [x] 数子（编码）
+- [x] 新 GTP 命令：`kata-set-bans`（编码）
+- [x] 新 GTP 命令：`kata-clear-bans`（编码）
+- [x] 新 GTP 命令：`kata-query-bans`（编码）
+- [x] checkConsistency 修复（方案外：放宽断言允许 C_WALL 在棋盘内 + 补 pos_hash）
+- [ ] 单元用例（气/提/劫/数子边界）（QA 矩阵依赖，后续配合）
 
 > **关键结论**：C_WALL(=3) 是 KataGo 原生的"棋盘外"颜色。将禁点设为 C_WALL 后，
 > 合法性/气/提子/劫争逻辑**零改动**自动正确。仅需修复数子（2 处）和 NN 输入（7 个 fillRow 版本）。
@@ -253,23 +258,68 @@ ENGINE 完成后，FE 可用改造后的 `katago.exe` 跑 20 路对局。
 
 ### 阻塞项
 
-- **🚫 INFRA 未交付**：本机无 cmake/MSVC，WP2/WP3 编码无法编译验证。方案已就绪，待工具链。
+- 无（WP2+WP3 已完成）
 
-### 待验证（编译后）
+### 冒烟测试后已验证项
 
-- [ ] MAX_LEN=25 时 Board 结构体增大（MAX_ARR_SIZE 442→703），搜索性能影响
-- [ ] 20 路 + `gtpForceMaxNNSize=true` 的 NN 评估质量（19 路网络 pad 到 25×25）
-- [ ] `kata-set-bans` 通过 `bot->setPosition` 重建棋盘的可行性（需确认带禁点的 Board 如何注入 search）
+- [x] MAX_LEN=25 编译通过，Board 结构体增大无问题
+- [x] 20 路 + `gtpForceMaxNNSize=true` 的 NN 评估正常（genmove 可落子，19 路网络 pad 到 25×25 可用）
+- [x] `kata-set-bans` 通过 `bot->setPosition` 重建棋盘可行（GTPEngine::setBans/clearBans 实现）
+- [x] pos_hash 一致性（checkConsistency 通过，setBannedPoint/clearBannedPoints 正确更新 hash）
+- [x] genmove 正确避开禁点（B→D4, W→R17，均非 D10/K10/F7）
+- [x] clear_board / boardsize 自动清禁点
+- [x] 19 路回归正常（komi 7.5、无禁点、标准棋盘）
+
+### 仍待验证
+
 - [ ] Board 频繁拷贝中 `std::set` 的性能开销（搜索内 Board 拷贝频繁，后续可优化为 bitmap）
+- [ ] 数子终局测试（需跑完整对局到终局，QA 矩阵覆盖）
+- [ ] NN 20 路评估质量（pad 到 25×25 边缘强度，需实战验证）
 
 ### 潜在风险
 
 - **NN 20 路效果**：若 pad 到 25×25 边缘评估过弱，可改 MAX_LEN=20 + `requireExactNNLen=true`（精确匹配，但 NN 初始化尺寸=20）
 - **analysis 模式 komi**：`analysis.cpp:916` 校验半整数，4.25 被拒。首期仅支持 GTP 对弈，analysis 模式二期处理
-- **pos_hash 一致性**：setBannedPoint/clearBannedPoints 必须正确更新 hash，否则 superko 检测出错
+- **banned 点 Zobrist hash**：当前复用 C_WALL hash（`ZOBRIST_BOARD_HASH[loc][C_WALL]`）。真实墙点（棋盘外）也在用同一 hash 表，但 banned 点的 loc 不会与真实墙点 loc 重叠（真实墙点在 `x>=x_size || y>=y_size` 区域），故无冲突
 
 ### 后续优化（非首期）
 
 - banned_points 用 bitmap 替代 `std::set`（减少拷贝开销）
 - analysis 模式支持 4.25 komi（放宽 komiIsIntOrHalfInt 或加 quarter-int 支持）
-- banned 点的 Zobrist 专用 hash（当前复用 C_WALL hash，可能与真实墙点冲突——需验证）
+- `isEmpty()` 在有禁点时返回 false（C_WALL != C_EMPTY）——逻辑正确但可能影响初始状态判断，需观察
+
+---
+
+## 7 冒烟测试结果（2026-08-08）
+
+**环境**：`dist_opencl\katago.exe`（含禁点改造）+ `28b.bin.gz` + `default_gtp.cfg`
+**配置覆盖**：`ignoreGTPAndForceKomi=4.25` + `gtpForceMaxNNSize=true` + `maxVisits=10`（加速）
+
+| 编号 | 测试项 | 命令 | 预期 | 实际 | 结果 |
+|------|--------|------|------|------|------|
+| G1 | 20 路棋盘 | `boardsize 20` | `=` 接受 | `=` | ✅ |
+| G2 | komi 4.25 override | `get_komi` | 返回 `4.25` | `4.25` | ✅ |
+| G2b | GTP komi 仍拒 4.25 | `komi 4.25` | `?` 报错 | `? komi must be an integer or half-integer` | ✅（预期） |
+| B1a | 设置禁点 | `kata-set-bans D10 K10 F7` | `=` | `=` | ✅ |
+| B1b | 查询禁点 | `kata-query-bans` | `D10 K10 F7` | `D10 K10 F7` | ✅ |
+| B1c | 棋盘显示禁点 | `showboard` | 3 个 `#` 标记 | D10/K10/F7 显示 `#` | ✅ |
+| B1d | genmove 避开禁点 | `genmove B` | 合法点（非禁点） | `D4` | ✅ |
+| B1e | 落子后禁点保留 | `kata-query-bans` | `D10 K10 F7` | `D10 K10 F7` | ✅ |
+| B1f | 白棋也避开禁点 | `genmove W` | 合法点（非禁点） | `R17` | ✅ |
+| B1g | 清除禁点 | `kata-clear-bans` | `=` | `=` | ✅ |
+| B1h | 清除后查询 | `kata-query-bans` | 空 | 空 | ✅ |
+| B1i | 单个禁点 | `kata-set-bans D10` | `=` + 查询 `D10` | `=` + `D10` | ✅ |
+| B1j | clear_board 自动清 | `clear_board` → `kata-query-bans` | 空 | 空 | ✅ |
+| B1k | boardsize 自动清 | `boardsize 19` → `kata-query-bans` | 空 | 空 | ✅ |
+| F1 | 19 路回归 | `boardsize 19` + `komi 7.5` + `genmove B` | 正常落子 | `R16`，komi=7.5 | ✅ |
+| F1b | 命令列表含新命令 | `list_commands` | 含 3 个新命令 | 含 `kata-set-bans` 等 | ✅ |
+
+**结论**：WP2+WP3 全部验收项通过。引擎支持 20×20 棋盘、4.25 贴子、禁点设置/查询/清除，genmove 正确避开禁点，19 路行为与原版一致。
+
+### 方案偏离记录
+
+| 项 | 方案 | 实际 | 原因 |
+|----|------|------|------|
+| checkConsistency | 未列入改动 | **新增修复**（board.cpp:2374） | 搜索调用 checkConsistency，C_WALL 在棋盘内触发断言。放宽断言 + 补 pos_hash |
+| 拷贝构造函数 | 未列入改动 | **新增 1 行**（board.cpp:131） | 手写 memcpy 拷贝不包含 `std::set`，需补 `banned_points = other.banned_points` |
+| GTPEngine 方法 | 未列入改动 | **新增 setBans/clearBans**（gtp.cpp:602-640） | 需通过 setPositionAndRules 重建带禁点的搜索位置 |

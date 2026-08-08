@@ -4,20 +4,27 @@ cli_player.py — 20路Ban选围棋 CLI 对弈工具
 职责：
   1. GtpEngine 类：通过 subprocess 管道与 KataGo 通信（GTP 协议）
   2. run_game()：Ban 阶段（调用 BanController）+ 正式对局（双引擎交替 genmove）
-  3. main()：命令行入口（aivai / human 模式）
+  3. review_sgf()：SGF 导入复盘（打印棋谱 + 禁点 + 终局棋盘）
+  4. main()：命令行入口（aivai / human / sgf-in 复盘模式）
 
-策略：先用原版 19 路引擎开发框架，等 ENGINE 完成后切 20 路。
-      kata-set-bans 暂用占位实现（打印日志），数子暂用引擎 final_score。
+引擎：使用 ENGINE 改造后的 KataGo v1.16.4（20 路 + kata-set-bans + komi 4.25）。
+      komi 4.25 经 -override-config ignoreGTPAndForceKomi=4.25 生效（不发 GTP komi 命令）。
+      19 路网络经 -override-config gtpForceMaxNNSize=true pad 到 20 路。
 
 GTP 协议响应格式：
   成功：= <内容>\n[后续行]\n\n   （以等号开头，空行结束）
   失败：? <错误>\n\n             （以问号开头，空行结束）
   kata-analyze 为流式输出：info 行持续输出，不以 = 开头，靠新命令终止。
+
+SGF 坐标系（详见 sgf_io.py）：
+  SGF 小写不跳 I（a-t），GTP 大写跳 I（A-H,J-U），经 (row,col) 中转。
+  ban 点用根节点 AE 属性记录，导入只读 AE。
 """
 
 from __future__ import annotations
 
 import argparse
+import datetime
 import os
 import queue
 import subprocess
@@ -34,12 +41,27 @@ from ban_controller import (
     gtp_to_point,
     point_to_gtp,
 )
+from sgf_io import (
+    ReplayBoard,
+    SgfGame,
+    export_sgf,
+    import_sgf,
+    point_to_sgf,
+    sgf_to_gtp,
+    sgf_to_point,
+)
 
 # ── 默认资源路径 ────────────────────────────────────────────────────────────
 
-DEFAULT_ENGINE = r"E:\2026-01-07-win64-KataGo\katago_opencl\katago.exe"
+DEFAULT_ENGINE = r"E:\小工具\new_go\dist_opencl\katago.exe"
 DEFAULT_MODEL = r"E:\2026-01-07-win64-KataGo\weights\28b.bin.gz"
 DEFAULT_CONFIG = r"E:\2026-01-07-win64-KataGo\katago_configs\default_gtp.cfg"
+
+# 20 路 Ban 选围棋必需的 override-config（硬编码为默认，确保开箱即用）
+DEFAULT_OVERRIDE_CONFIGS = [
+    "ignoreGTPAndForceKomi=4.25",   # 强制 komi 4.25（绕过 GTP komi 半整数限制）
+    "gtpForceMaxNNSize=true",       # 19 路网络 pad 到 MAX_LEN（支持 20 路）
+]
 
 # 选手 ↔ 棋色映射（规则：选手 B 执黑，选手 A 执白）
 PLAYER_TO_COLOR = {"B": "B", "A": "W"}      # 选手 → 棋色 B/W
@@ -65,6 +87,7 @@ class GtpEngine:
         color: str = "B",
         stderr_path: Optional[str] = None,
         extra_configs: Optional[list[str]] = None,
+        override_configs: Optional[list[str]] = None,
         init_timeout: float = 900.0,
     ):
         if not os.path.isfile(exe_path):
@@ -80,6 +103,8 @@ class GtpEngine:
         args = [exe_path, "gtp", "-config", config_path]
         for ec in (extra_configs or []):
             args += ["-config", ec]
+        for oc in (override_configs or []):
+            args += ["-override-config", oc]
         args += ["-model", model_path]
         self._init_timeout = init_timeout
 
@@ -309,14 +334,17 @@ def print_board(
 class GameConfig:
     mode: str = "aivai"            # aivai / human
     color: str = "B"               # human 模式下人类棋色 B/W
-    boardsize: int = 19
+    boardsize: int = 20
     engine: str = DEFAULT_ENGINE
     model: str = DEFAULT_MODEL
     config: str = DEFAULT_CONFIG
     extra_configs: Optional[list[str]] = None  # 附加 config（如 homeDataDir 缓存）
+    override_configs: Optional[list[str]] = None  # override-config（默认用 DEFAULT_OVERRIDE_CONFIGS）
     ban_strategy: str = "random"   # random / gtp / auto
     max_moves: int = 0             # 正式对局最大手数（0=不限）
-    komi: float = 4.25             # 贴子（传给引擎 final_score 用）
+    komi: float = 4.25             # 贴子（经 override-config 生效，非 GTP komi 命令）
+    sgf_out: Optional[str] = None  # SGF 导出路径（None=自动生成名）
+    no_sgf: bool = False           # 不导出 SGF
 
 
 # ── 对局主流程 ──────────────────────────────────────────────────────────────
@@ -330,12 +358,14 @@ def run_game(cfg: GameConfig) -> None:
     human_player = COLOR_TO_PLAYER[human_color]  # 选手 "A" 或 "B"
 
     # ── 启动两个引擎：黑(选手B) / 白(选手A) ──
+    override_configs = cfg.override_configs or list(DEFAULT_OVERRIDE_CONFIGS)
     print(f"[启动] 黑方引擎 (选手B) ...")
     eng_black = GtpEngine(
         cfg.engine, cfg.model, cfg.config,
         boardsize=boardsize, color="B",
         stderr_path="engine_black.log",
         extra_configs=cfg.extra_configs,
+        override_configs=override_configs,
     )
     print(f"[启动] 白方引擎 (选手A) ...")
     eng_white = GtpEngine(
@@ -343,15 +373,16 @@ def run_game(cfg: GameConfig) -> None:
         boardsize=boardsize, color="W",
         stderr_path="engine_white.log",
         extra_configs=cfg.extra_configs,
+        override_configs=override_configs,
     )
 
     try:
-        # 设置贴子（让 final_score 用 4.25）
+        # 确认 komi 经 override-config 生效（不发 komi 命令，GTP 会拒 4.25）
         try:
-            eng_black.komi(cfg.komi)
-            eng_white.komi(cfg.komi)
-        except RuntimeError as e:
-            print(f"[警告] 设置 komi 失败（占位接受）: {e}")
+            actual_komi = eng_black.send("get_komi").strip()
+            print(f"[确认] 引擎 komi = {actual_komi}（经 override-config 生效）")
+        except RuntimeError:
+            pass  # 某些引擎版本可能无 get_komi，忽略
 
         # ═══════════ Ban 阶段 ═══════════
         margin = 3
@@ -364,19 +395,13 @@ def run_game(cfg: GameConfig) -> None:
         )
         bc = BanController(ban_cfg)
 
-        # 注入 GTP 引擎接口（框架阶段用 random，不实际调用 gtp 分析；
-        # 此处注入仅占位，便于后续切换 gtp 策略）
-        def _engine_stub(cmd: str) -> str:
-            # kata-set-bans / kata-clear-bans：原版不支持，占位返回成功
-            if cmd.startswith("kata-set-bans") or cmd.startswith("kata-clear-bans"):
-                print(f"  [placeholder] {cmd}")
-                return "= \n"
-            # kata-analyze：走 analyze 流式
+        # 注入真实 GTP 引擎接口（供 BanController 的 ai_pick_gtp 策略使用）
+        def _gtp_callable(cmd: str) -> str:
             if cmd.startswith("kata-analyze"):
                 return eng_black.analyze(interval=1.0)
             return eng_black.send(cmd)
 
-        bc.set_gtp_engine(_engine_stub)
+        bc.set_gtp_engine(_gtp_callable)
 
         print(f"\n=== Ban 阶段（{boardsize}路，区域 "
               f"{ban_cfg.region_row_min}-{ban_cfg.region_row_max}，"
@@ -422,7 +447,16 @@ def run_game(cfg: GameConfig) -> None:
         ban_labels = sorted(point_to_gtp(r, c) for r, c in result.banned_points)
         print(f"\n[Ban 阶段结束] 结论: {result.concluded_by}")
         print(f"[禁点集合] ({len(ban_labels)} 个): {' '.join(ban_labels)}")
-        print(f"[placeholder] would set bans: {' '.join(ban_labels)}")
+
+        # 真实注入禁点到两个引擎
+        if ban_labels:
+            ban_cmd = f"kata-set-bans {' '.join(ban_labels)}"
+            try:
+                eng_black.send(ban_cmd)
+                eng_white.send(ban_cmd)
+                print(f"[引擎] kata-set-bans 已注入 {len(ban_labels)} 个禁点")
+            except RuntimeError as e:
+                print(f"[错误] kata-set-bans 失败: {e}")
 
         # ═══════════ 正式对局 ═══════════
         print(f"\n=== 正式对局（黑先，komi={cfg.komi}）===")
@@ -433,6 +467,7 @@ def run_game(cfg: GameConfig) -> None:
         consecutive_pass = 0
         move_no = 0
         resigned_by: Optional[str] = None
+        game_moves: list[tuple[str, str]] = []  # (color, gtp_coord or "pass")
 
         while True:
             if cfg.max_moves and move_no >= cfg.max_moves:
@@ -470,6 +505,8 @@ def run_game(cfg: GameConfig) -> None:
                 print(f"  {role} 认输")
                 break
 
+            game_moves.append((turn, "pass" if coord_norm == "pass" else coord.strip()))
+
             if coord_norm == "pass":
                 consecutive_pass += 1
                 print(f"  {role} pass（连续 pass: {consecutive_pass}）")
@@ -486,10 +523,10 @@ def run_game(cfg: GameConfig) -> None:
 
                 if row is not None:
                     stones[(row, col)] = turn
-                    # 落在禁点？（原版引擎不知禁点，占位警告）
+                    # 检测 AI 是否落在禁点上（ENGINE 实装后正常应避开）
                     if (row, col) in bc.banned:
-                        print(f"  [警告] {coord} 落在禁点上 "
-                              f"（原版引擎不支持 bans，占位接受）")
+                        print(f"  [异常] {coord} 落在禁点上！"
+                              f"（规则 §5：落禁点累计 3 次判负）")
                     # 同步给另一个引擎
                     other_key = "W" if turn == "B" else "B"
                     try:
@@ -503,29 +540,96 @@ def run_game(cfg: GameConfig) -> None:
 
         # ═══════════ 终局数子 ═══════════
         print(f"\n=== 终局数子 ===")
+        game_result = ""
         if resigned_by is not None:
             winner = "W" if resigned_by == "B" else "B"
+            game_result = f"{winner}+R"
             print(f"认输结局: {'黑' if winner == 'B' else '白'}(选手"
                   f"{'B' if winner == 'B' else 'A'})胜")
         else:
             try:
                 score = eng_black.final_score()
-                print(f"[占位] 引擎 final_score: {score}")
+                print(f"引擎 final_score: {score}")
+                game_result = score
             except RuntimeError as e:
-                print(f"[占位] final_score 失败: {e}")
-                score = "?"
-            print(f"[TODO] 后续按 20 路公式判定（禁点 {len(ban_labels)} 个）：")
-            print(f"       有效点 = 400 - {len(ban_labels)} = "
-                  f"{400 - len(ban_labels)}，基准 = "
-                  f"{(400 - len(ban_labels)) / 2}")
-            print(f"       黑胜: 黑子数 > {195 + cfg.komi:.2f}  "
-                  f"白胜: 白子数 > {195 - cfg.komi:.2f}")
+                print(f"final_score 失败: {e}")
+                score = ""
+                game_result = ""
+
+            # 20 路公式判定（规则 §4）
+            ban_count = len(ban_labels)
+            total_pts = boardsize * boardsize
+            valid_pts = total_pts - ban_count
+            base = valid_pts / 2
+            black_threshold = base + cfg.komi    # 黑胜需 > 199.25
+            white_threshold = base - cfg.komi    # 白胜需 > 190.75
+            print(f"20路公式: 有效点 = {total_pts} - {ban_count} = {valid_pts}，"
+                  f"基准 = {base}")
+            print(f"  黑胜: 黑子数 > {black_threshold:.2f}")
+            print(f"  白胜: 白子数 > {white_threshold:.2f}")
+            if score:
+                print(f"引擎判定: {score}")
+
+        # ═══════════ SGF 导出 ═══════════
+        if not cfg.no_sgf:
+            sgf_path = cfg.sgf_out or (
+                f"game_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.sgf"
+            )
+            sgf_game = SgfGame(
+                boardsize=boardsize,
+                komi=cfg.komi,
+                player_b="选手B",
+                player_a="选手A",
+                date=datetime.date.today().isoformat(),
+                bans=sorted(bc.banned),
+                moves=game_moves,
+                result=game_result,
+            )
+            try:
+                export_sgf(sgf_game, sgf_path)
+                print(f"[SGF] 已导出: {sgf_path}")
+            except Exception as e:
+                print(f"[SGF] 导出失败: {e}")
 
     finally:
         print("\n[关闭引擎 ...")
         eng_black.close()
         eng_white.close()
         print("[完成]")
+
+
+# ── SGF 复盘 ────────────────────────────────────────────────────────────────
+
+def review_sgf(path: str) -> None:
+    """导入 SGF 并打印棋谱 + 禁点 + 终局棋盘，供复盘。"""
+    game = import_sgf(path)
+
+    print(f"=== SGF 复盘: {path} ===")
+    print(f"棋盘: {game.boardsize}路 | 贴目: {game.komi} | "
+          f"黑: {game.player_b} | 白: {game.player_a} | 日期: {game.date}")
+    if game.result:
+        print(f"结果: {game.result}")
+    if game.boardsize != 20:
+        print(f"[提示] 棋盘尺寸 {game.boardsize} 非 20 路（20 路变体标准）")
+
+    ban_set = set(game.bans)
+    ban_labels = sorted(point_to_gtp(r, c) for r, c in game.bans)
+    print(f"禁点 ({len(ban_labels)} 个): {' '.join(ban_labels) if ban_labels else '无'}")
+
+    print(f"\n手谱 ({len(game.moves)} 手):")
+    for i, (color, coord) in enumerate(game.moves):
+        role = "黑" if color == "B" else "白"
+        print(f"  {i + 1:>3}. {role} {coord}")
+
+    board = ReplayBoard(game.boardsize, ban_set)
+    for color, coord in game.moves:
+        if coord.lower() == "pass":
+            continue
+        row, col = gtp_to_point(coord)
+        board.play(color, row, col)
+
+    print(f"\n终局棋盘:")
+    print_board(board.stones, ban_set, game.boardsize)
 
 
 # ── 命令行入口 ──────────────────────────────────────────────────────────────
@@ -538,8 +642,8 @@ def build_parser() -> argparse.ArgumentParser:
                    help="对局模式：aivai=AI对AI，human=人对AI（默认 aivai）")
     p.add_argument("--color", choices=["B", "W"], default="B",
                    help="human 模式下人类棋色：B=黑先手，W=白后手（默认 B）")
-    p.add_argument("--boardsize", type=int, default=19,
-                   help="棋盘尺寸（默认 19，ENGINE 就绪后切 20）")
+    p.add_argument("--boardsize", type=int, default=20,
+                   help="棋盘尺寸（默认 20）")
     p.add_argument("--engine", default=DEFAULT_ENGINE, help="katago.exe 路径")
     p.add_argument("--model", default=DEFAULT_MODEL, help="权重文件路径")
     p.add_argument("--config", default=DEFAULT_CONFIG, help="GTP 配置文件路径")
@@ -551,12 +655,30 @@ def build_parser() -> argparse.ArgumentParser:
                    help="正式对局最大手数（0=不限，调试时可设小值）")
     p.add_argument("--komi", type=float, default=4.25,
                    help="贴子（默认 4.25，传给引擎 final_score）")
+    p.add_argument("--sgf-out", default=None,
+                   help="SGF 导出路径（默认自动生成 game_YYYYMMDD_HHMMSS.sgf）")
+    p.add_argument("--sgf-in", default=None,
+                   help="导入 SGF 复盘（不启动新对局）")
+    p.add_argument("--no-sgf", action="store_true",
+                   help="不导出 SGF 文件")
     return p
 
 
 def main(argv: Optional[list[str]] = None) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
+
+    # SGF 导入复盘模式（不启动新对局）
+    if args.sgf_in:
+        try:
+            review_sgf(args.sgf_in)
+        except FileNotFoundError as e:
+            print(f"[错误] {e}", file=sys.stderr)
+            return 1
+        except Exception as e:
+            print(f"[错误] {e}", file=sys.stderr)
+            raise
+        return 0
 
     cfg = GameConfig(
         mode=args.mode,
@@ -566,9 +688,12 @@ def main(argv: Optional[list[str]] = None) -> int:
         model=args.model,
         config=args.config,
         extra_configs=args.extra_config,
+        override_configs=list(DEFAULT_OVERRIDE_CONFIGS),
         ban_strategy=args.ban_strategy,
         max_moves=args.max_moves,
         komi=args.komi,
+        sgf_out=args.sgf_out,
+        no_sgf=args.no_sgf,
     )
 
     print(f"模式: {cfg.mode} | 棋盘: {cfg.boardsize}路 | "

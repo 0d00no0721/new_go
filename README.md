@@ -8,7 +8,7 @@
 - **两阶段**：Ban 选阶段（10 次禁点选择）→ 正式围棋对局
 - **贴子**：黑贴 4.25 子（有效点位 390，基准 195）
 - **AI**：基于 KataGo v1.16.4 源码改造，支持禁点规则与 20 路棋盘
-- **当前状态**：引擎改造完成（M1-M3 ✅），CLI 对弈工具 20 路跑通，验收测试进行中（整体 ~58%）
+- **当前状态**：核心交付完成（M1-M7 ✅），5 agent 全部完成，DoD 8 条全覆盖（整体 ~92%）
 
 ## 快速开始
 
@@ -51,12 +51,14 @@ benchmark：RTX 5060 OpenCL，20 线程 **429 visits/s**。
 
 ```powershell
 $env:PYTHONIOENCODING='utf-8'
-python -m pytest test_qa_matrix.py test_gtp_engine.py test_e2e.py -v   # 常规（~30s）
-python -m pytest test_perf.py -v --slow                                 # 性能基准
-python -m py_compile *.py                                               # 语法检查
+python -m pytest test_qa_matrix.py test_gtp_engine.py test_e2e.py test_params.py test_perf.py -v  # 常规（~105s）
+python -m pytest test_perf.py -v --slow                                # 性能基准
+python -m py_compile *.py                                              # 语法检查
 ```
 
 PowerShell 下中文输出须先设 `$env:PYTHONIOENCODING='utf-8'`，否则 print 报 cp950 编码错。
+
+测试结果：24 passed + 5 xfailed（GTP 接口限制诚实标注）+ 3 slow，约 105s。DoD 8 条全覆盖。
 
 ## 目录结构
 
@@ -131,6 +133,6 @@ new_go/
 | ENGINE | KataGo 源码改造（MAX_LEN / 禁点 / komi） | ✅ 完成 |
 | RULES | Ban 控制器（序列 / 校验 / AI 选点） | ✅ 完成 |
 | FE | CLI 对弈工具 + SGF | ✅ 完成 |
-| QA | 测试与验收 | 🔄 收尾中 |
+| QA | 测试与验收 | ✅ 完成 |
 
 详见 `AGENTS.md`（协作约定）与 `进度总览.md`（全局进度）。

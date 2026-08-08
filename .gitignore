@@ -19,6 +19,7 @@ KataGoData/
 *.bin
 *.sgf
 *.log
+*.gtp
 
 # Python
 __pycache__/
