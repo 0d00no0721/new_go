@@ -5,7 +5,7 @@ on:
     branches: [main]
     paths:
       - ban-selection/website/**
-      - ban-selection/.github/workflows/**
+      - .github/workflows/**
   workflow_dispatch:
 
 permissions:
