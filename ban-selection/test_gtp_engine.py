@@ -29,7 +29,7 @@ import pytest
 
 # ── 路径 ─────────────────────────────────────────────────────────────────────
 
-EXE = r"E:\小工具\new_go\dist_opencl\katago.exe"
+EXE = r"E:\小工具\new_go\ban-selection\dist_opencl\katago.exe"
 MODEL = r"E:\2026-01-07-win64-KataGo\weights\28b.bin.gz"
 CONFIG = r"E:\2026-01-07-win64-KataGo\katago_configs\default_gtp.cfg"
 CACHE_DIR = "E:/katago_cache"

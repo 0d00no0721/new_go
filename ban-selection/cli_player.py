@@ -53,7 +53,7 @@ from sgf_io import (
 
 # ── 默认资源路径 ────────────────────────────────────────────────────────────
 
-DEFAULT_ENGINE = r"E:\小工具\new_go\dist_opencl\katago.exe"
+DEFAULT_ENGINE = r"E:\小工具\new_go\ban-selection\dist_opencl\katago.exe"
 DEFAULT_MODEL = r"E:\2026-01-07-win64-KataGo\weights\28b.bin.gz"
 DEFAULT_CONFIG = r"E:\2026-01-07-win64-KataGo\katago_configs\default_gtp.cfg"
 

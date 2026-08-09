@@ -4,8 +4,8 @@ on:
   push:
     branches: [main]
     paths:
-      - website/**
-      - .github/workflows/**
+      - ban-selection/website/**
+      - ban-selection/.github/workflows/**
   workflow_dispatch:
 
 permissions:
@@ -24,7 +24,7 @@ jobs:
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: website
+          path: ban-selection/website
   deploy:
     needs: build
     runs-on: ubuntu-latest

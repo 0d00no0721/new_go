@@ -194,7 +194,7 @@ python cli_player.py --mode aivai --no-sgf --max-moves 3
 
 ### 依赖 ENGINE（✅ 已就绪）
 
-- 改造后的 `katago.exe` 已交付：`E:\小工具\new_go\dist_opencl\katago.exe`（v1.16.4，含禁点改造）
+- 改造后的 `katago.exe` 已交付：`E:\小工具\new_go\ban-selection\dist_opencl\katago.exe`（v1.16.4，含禁点改造）
 - 已验证功能（ENGINE 冒烟 + FE 联调）：
   1. ✅ `boardsize 20` → 接受
   2. ✅ `get_komi` → 4.25（经 `-override-config ignoreGTPAndForceKomi=4.25` 生效）
@@ -211,8 +211,8 @@ python cli_player.py --mode aivai --no-sgf --max-moves 3
 
 | 项 | 值 |
 |----|-----|
-| 工作目录 | `E:\小工具\new_go\` |
-| 改造后引擎 | `E:\小工具\new_go\dist_opencl\katago.exe`（v1.16.4，20 路 + 禁点） |
+| 工作目录 | `E:\小工具\new_go\ban-selection\` |
+| 改造后引擎 | `E:\小工具\new_go\ban-selection\dist_opencl\katago.exe`（v1.16.4，20 路 + 禁点） |
 | 权重 | `E:\2026-01-07-win64-KataGo\weights\28b.bin.gz`（19 路网络，pad 到 20 路） |
 | 引擎配置 | `E:\2026-01-07-win64-KataGo\katago_configs\default_gtp.cfg` |
 | override-config | `ignoreGTPAndForceKomi=4.25` + `gtpForceMaxNNSize=true`（硬编码） |

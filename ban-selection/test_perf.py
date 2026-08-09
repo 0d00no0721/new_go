@@ -20,7 +20,7 @@ import pytest
 
 from test_gtp_engine import GtpEngine, _BASE, _KOMI, CACHE_DIR
 
-EXE = r"E:\小工具\new_go\dist_opencl\katago.exe"
+EXE = r"E:\小工具\new_go\ban-selection\dist_opencl\katago.exe"
 
 
 @pytest.mark.slow

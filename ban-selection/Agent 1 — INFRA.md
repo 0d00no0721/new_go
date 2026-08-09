@@ -82,10 +82,10 @@
 | 现有 KataGo 包 | `E:\2026-01-07-win64-KataGo\` |
 | 现有权重 | `18b.bin.gz` / `28b.bin.gz` / `humansl.bin.gz` / `model.bin` |
 | 现有配置 | `E:\2026-01-07-win64-KataGo\katago_configs\default_gtp.cfg` |
-| 工作目录 | `E:\小工具\new_go\` |
-| 源码目录 | `E:\小工具\new_go\katago-src\` |
+| 工作目录 | `E:\小工具\new_go\ban-selection\` |
+| 源码目录 | `E:\小工具\new_go\ban-selection\katago-src\` |
 | 构建目录 | `E:\katabuild\`（英文路径，规避中文路径坑） |
-| 产物目录 | `E:\小工具\new_go\dist_opencl\` |
+| 产物目录 | `E:\小工具\new_go\ban-selection\dist_opencl\` |
 
 ---
 
@@ -97,9 +97,9 @@ INFRA 完成后，ENGINE 可在 `katago-src/` 上进行源码改造并使用 `bu
 
 **重建命令（在 PowerShell 中）：**
 ```powershell
-pwsh -NoProfile -ExecutionPolicy Bypass -File "E:\小工具\new_go\build_opencl.ps1"
+pwsh -NoProfile -ExecutionPolicy Bypass -File "E:\小工具\new_go\ban-selection\build_opencl.ps1"
 # 干净重建：
-pwsh -NoProfile -ExecutionPolicy Bypass -File "E:\小工具\new_go\build_opencl.ps1" -Clean
+pwsh -NoProfile -ExecutionPolicy Bypass -File "E:\小工具\new_go\ban-selection\build_opencl.ps1" -Clean
 ```
 - 脚本会自动：注入 vcvars64 → CMake configure（vcpkg toolchain）→ MSBuild Release → 收集产物到 `dist_opencl\`
 - 改源码后直接重跑脚本即可，增量构建很快

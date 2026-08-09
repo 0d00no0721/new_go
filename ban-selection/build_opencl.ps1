@@ -24,9 +24,9 @@ $ErrorActionPreference = 'Stop'
 # === 路径配置 ===
 $VcVars    = "C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
 $VcpkgRoot = "E:\vcpkg"
-$SrcDir    = "E:\小工具\new_go\katago-src\cpp"
+$SrcDir    = "E:\小工具\new_go\ban-selection\katago-src\cpp"
 $BuildDir  = "E:\katabuild"
-$DistDir   = "E:\小工具\new_go\dist_opencl"
+$DistDir   = "E:\小工具\new_go\ban-selection\dist_opencl"
 $Proxy     = "http://127.0.0.1:15715"
 
 # vcpkg/git 子进程联网需要代理（编译本身不联网，但 configure 会调 git 取 revision）

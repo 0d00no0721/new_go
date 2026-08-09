@@ -13,6 +13,8 @@ cmake-build-*/
 katago-src/
 compile-build/
 dist/
+dist_opencl/
+gtp_logs/
 
 # KataGo 运行时产物
 KataGoData/
