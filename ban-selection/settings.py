@@ -18,7 +18,9 @@ DEFAULT_SETTINGS = {
     "maxTime": 10.0,
     "numSearchThreads": 6,
     "ponderingEnabled": False,
-    "model_path": r"E:\2026-01-07-win64-KataGo\weights\28b.bin.gz",
+    "engine_path": "katago.exe",            # 相对 exe/脚本目录
+    "config_path": "default_gtp.cfg",       # 相对 exe/脚本目录
+    "model_path": "28b.bin.gz",             # 相对 exe/脚本目录
     "board_rows": 20,
     "board_cols": 20,
     "game_mode": "人vsAI",      # "人vsAI" / "AIvsAI" / "人vs人"

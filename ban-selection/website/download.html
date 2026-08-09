@@ -27,18 +27,9 @@
 
         <section class="download-box">
             <h3>BanGo.exe</h3>
-            <p class="size">Windows 64 位 · 约 11 MB · 基于 KataGo v1.16.4</p>
-            <a href="https://github.com/0d00no0721/new_go/releases" class="btn btn-primary btn-large">前往 Release 下载</a>
-            <p class="release-note">Release 待发布。当前可从仓库源码自行构建，或使用本地仓库内预编译版本。</p>
-        </section>
-
-        <div class="note">exe 当前未入 git，本地点击下载按钮跳转 Release 页面（尚未发布）属正常现象。以文字说明为准。</div>
-
-        <section>
-            <h2>本地试用</h2>
-            <p>若已克隆本仓库到本地，可直接运行预编译的 GUI 程序，无需下载：</p>
-            <pre><code>..\dist\BanGo.exe</code></pre>
-            <p>该路径相对于本网页目录（<code>website\</code>）。即仓库根目录下的 <code>dist\BanGo.exe</code>。</p>
+            <p class="size">Windows 64 位 · 12.7 MB · 含改造版 KataGo 引擎</p>
+            <a href="https://github.com/0d00no0721/new_go/releases/download/ban-selection-v1.0/BanGo-v1.0-windows-x64.zip" class="btn btn-primary btn-large">下载 BanGo-v1.0-windows-x64.zip</a>
+            <p class="release-note">解压后需另行下载 KataGo 权重文件（约 260 MB），详见下方说明。</p>
         </section>
 
         <section>
@@ -47,17 +38,24 @@
                 <tr><th>项</th><th>要求</th></tr>
                 <tr><td>操作系统</td><td>Windows 10 / 11 64 位</td></tr>
                 <tr><td>显卡</td><td>OpenCL 兼容 GPU（NVIDIA / AMD / Intel 均可）</td></tr>
-                <tr><td>磁盘空间</td><td>约 50 MB（含引擎 + 权重 + 缓存）</td></tr>
-                <tr><td>权重文件</td><td>需另行准备 KataGo 19 路权重（如 <code>28b.bin.gz</code>），程序自动 pad 到 20 路</td></tr>
+                <tr><td>磁盘空间</td><td>约 20 MB（程序）+ 260 MB（权重文件）</td></tr>
+                <tr><td>权重文件</td><td>需另行下载 KataGo 权重（<a href="https://katagotraining.org/networks/">官方下载</a>），19 路权重自动 pad 到 20 路</td></tr>
             </table>
         </section>
 
         <section>
-            <h2>使用步骤</h2>
+            <h2>安装步骤</h2>
             <ol>
-                <li><strong>双击 <code>BanGo.exe</code></strong> 启动程序。首次启动会弹出设置对话框，选择权重文件路径与 AI 水平。</li>
+                <li><strong>解压</strong> BanGo-v1.0-windows-x64.zip 到任意文件夹。</li>
+                <li><strong>下载权重文件</strong>（必须，约 260 MB）：
+                    <ul>
+                        <li>官方下载页：<a href="https://katagotraining.org/networks/">katagotraining.org/networks</a></li>
+                        <li>推荐 28 层网络（如 <code>b18c384nbt-uec.bin.gz</code>）</li>
+                        <li>放入解压目录（与 <code>BanGo.exe</code> 同目录）</li>
+                    </ul>
+                </li>
+                <li><strong>双击 <code>BanGo.exe</code></strong> 启动。首次启动会弹出设置对话框，确认权重文件路径并选择 AI 水平。</li>
                 <li><strong>首次启动 OpenCL autotuning</strong>：约需 1‑2 分钟进行 GPU 调优（后续启动因缓存命中约 10 秒）。</li>
-                <li><strong>设置参数</strong>：在「文件 → 设置」中调整 AI 水平、思考时间、棋盘行列数、对局模式（人 vs AI / AI vs AI）。</li>
                 <li><strong>新对局</strong>：点击「新对局」开始。Ban 选阶段按提示点选禁点，随后进入正式对局。</li>
             </ol>
         </section>
@@ -67,13 +65,16 @@
             <p>设置保存在 <code>settings.json</code>（与 exe 同目录），可手动编辑以下参数：</p>
             <table>
                 <tr><th>参数</th><th>默认</th><th>说明</th></tr>
+                <tr><td><code>engine_path</code></td><td>katago.exe</td><td>引擎文件路径（相对 exe 目录）</td></tr>
+                <tr><td><code>config_path</code></td><td>default_gtp.cfg</td><td>引擎配置文件路径</td></tr>
+                <tr><td><code>model_path</code></td><td>28b.bin.gz</td><td>权重文件路径（需自行下载）</td></tr>
                 <tr><td><code>maxVisits</code></td><td>800</td><td>KataGo 最大搜索访问数</td></tr>
                 <tr><td><code>maxTime</code></td><td>10.0</td><td>思考时间上限（秒）</td></tr>
                 <tr><td><code>numSearchThreads</code></td><td>6</td><td>搜索线程数（建议按 GPU 调至 20）</td></tr>
                 <tr><td><code>ponderingEnabled</code></td><td>false</td><td>后台思考（开启会占 GPU 可能卡顿）</td></tr>
                 <tr><td><code>board_rows</code></td><td>20</td><td>棋盘行数（9‑25）</td></tr>
                 <tr><td><code>board_cols</code></td><td>20</td><td>棋盘列数（9‑25）</td></tr>
-                <tr><td><code>game_mode</code></td><td>人vsAI</td><td>对局模式（人vsAI / AIvsAI）</td></tr>
+                <tr><td><code>game_mode</code></td><td>人vsAI</td><td>对局模式（人vsAI / AIvsAI / 人vs人）</td></tr>
             </table>
 
             <h3>AI 水平预设</h3>

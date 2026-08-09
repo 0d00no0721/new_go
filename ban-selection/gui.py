@@ -134,13 +134,37 @@ class SettingsDialog(tk.Toplevel):
                         variable=self.v_ponder).grid(row=row, column=1, sticky="w", pady=3)
         row += 1
 
+        # 引擎文件
+        ttk.Label(frm, text="引擎文件 (katago.exe)").grid(row=row, column=0, sticky="w", pady=3)
+        eng_frm = ttk.Frame(frm)
+        eng_frm.grid(row=row, column=1, sticky="w", pady=3)
+        self.v_engine = tk.StringVar(value=current.get("engine_path", "katago.exe"))
+        ttk.Entry(eng_frm, textvariable=self.v_engine, width=28).pack(side="left")
+        ttk.Button(eng_frm, text="浏览", command=lambda: self._browse_file(
+            self.v_engine, "选择引擎文件", [("KataGo 引擎", "*.exe"), ("所有文件", "*.*")]),
+            width=6).pack(side="left", padx=4)
+        row += 1
+
+        # 引擎配置
+        ttk.Label(frm, text="引擎配置 (default_gtp.cfg)").grid(row=row, column=0, sticky="w", pady=3)
+        cfg_frm = ttk.Frame(frm)
+        cfg_frm.grid(row=row, column=1, sticky="w", pady=3)
+        self.v_config = tk.StringVar(value=current.get("config_path", "default_gtp.cfg"))
+        ttk.Entry(cfg_frm, textvariable=self.v_config, width=28).pack(side="left")
+        ttk.Button(cfg_frm, text="浏览", command=lambda: self._browse_file(
+            self.v_config, "选择引擎配置", [("GTP 配置", "*.cfg"), ("所有文件", "*.*")]),
+            width=6).pack(side="left", padx=4)
+        row += 1
+
         # 权重文件
-        ttk.Label(frm, text="权重文件").grid(row=row, column=0, sticky="w", pady=3)
+        ttk.Label(frm, text="权重文件 (.bin.gz)").grid(row=row, column=0, sticky="w", pady=3)
         path_frm = ttk.Frame(frm)
         path_frm.grid(row=row, column=1, sticky="w", pady=3)
-        self.v_model = tk.StringVar(value=current.get("model_path", DEFAULT_MODEL))
+        self.v_model = tk.StringVar(value=current.get("model_path", "28b.bin.gz"))
         ttk.Entry(path_frm, textvariable=self.v_model, width=28).pack(side="left")
-        ttk.Button(path_frm, text="浏览", command=self._browse, width=6).pack(side="left", padx=4)
+        ttk.Button(path_frm, text="浏览", command=lambda: self._browse_file(
+            self.v_model, "选择权重文件", [("KataGo 权重", "*.bin.gz *.bin"), ("所有文件", "*.*")]),
+            width=6).pack(side="left", padx=4)
         row += 1
 
         # 棋盘行数
@@ -185,14 +209,14 @@ class SettingsDialog(tk.Toplevel):
             self.v_visits.set(str(p["maxVisits"]))
             self.v_threads.set(str(p["numSearchThreads"]))
 
-    def _browse(self):
+    def _browse_file(self, var: tk.StringVar, title: str, filetypes: list):
         path = filedialog.askopenfilename(
-            title="选择权重文件",
-            filetypes=[("KataGo 权重", "*.bin.gz *.bin"), ("所有文件", "*.*")],
-            initialdir=os.path.dirname(self.v_model.get()) or ".",
+            title=title,
+            filetypes=filetypes,
+            initialdir=os.path.dirname(var.get()) or ".",
         )
         if path:
-            self.v_model.set(path)
+            var.set(path)
 
     def _ok(self):
         try:
@@ -208,6 +232,8 @@ class SettingsDialog(tk.Toplevel):
             messagebox.showwarning("设置", "棋盘行列数必须在 9-25 之间", parent=self)
             return
         model = self.v_model.get().strip()
+        engine = self.v_engine.get().strip()
+        config = self.v_config.get().strip()
         if not os.path.isfile(model):
             messagebox.showwarning("设置", f"权重文件不存在：\n{model}", parent=self)
             return
@@ -217,6 +243,8 @@ class SettingsDialog(tk.Toplevel):
             "maxTime": t,
             "numSearchThreads": threads,
             "ponderingEnabled": bool(self.v_ponder.get()),
+            "engine_path": engine,
+            "config_path": config,
             "model_path": model,
             "board_rows": rows,
             "board_cols": cols,
@@ -549,11 +577,22 @@ class BanGoApp:
 
     # ── 引擎启动 ──
 
+    @staticmethod
+    def _resolve_path(p: str) -> str:
+        """将相对路径解析为绝对路径：frozen 模式相对 exe 目录，开发模式相对脚本目录。"""
+        if os.path.isabs(p):
+            return p
+        base = os.path.dirname(sys.executable) if getattr(sys, "frozen", False) \
+            else os.path.dirname(os.path.abspath(__file__))
+        return os.path.join(base, p)
+
     def _start_engine(self):
         self._eng_ready = False
         self.lbl_status.config(text="正在加载引擎...（首次启动可能需 1-2 分钟）")
         s = self.settings
-        model = s.get("model_path", DEFAULT_MODEL)
+        engine = self._resolve_path(s.get("engine_path", "katago.exe"))
+        model = self._resolve_path(s.get("model_path", "28b.bin.gz"))
+        config = self._resolve_path(s.get("config_path", "default_gtp.cfg"))
         override = list(DEFAULT_OVERRIDE_CONFIGS) + build_override_configs(s)
         # 非正方形时传 tuple
         bs = (self.rows, self.cols) if self.rows != self.cols else self.rows
@@ -561,7 +600,7 @@ class BanGoApp:
         def worker():
             try:
                 self.eng = GtpEngine(
-                    DEFAULT_ENGINE, model, DEFAULT_CONFIG,
+                    engine, model, config,
                     boardsize=bs, color=self.ai_color,
                     stderr_path="engine_gui.log",
                     extra_configs=["gtp_override.cfg"],
@@ -583,10 +622,13 @@ class BanGoApp:
         self._maybe_ai_ban()
 
     def _on_engine_error(self, err: str):
+        s = self.settings
+        engine = self._resolve_path(s.get("engine_path", "katago.exe"))
         self.lbl_status.config(text=f"引擎启动失败: {err}")
         messagebox.showerror("引擎错误",
                              f"无法启动 KataGo 引擎:\n{err}\n\n"
-                             f"请确保 dist_opencl\\katago.exe 存在。")
+                             f"引擎路径: {engine}\n\n"
+                             f"请在「文件 → 设置」中检查引擎、配置、权重文件路径。")
 
     def _open_settings(self, first_launch: bool = False):
         dlg = SettingsDialog(self.root, self.settings)
