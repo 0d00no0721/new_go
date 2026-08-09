@@ -12,6 +12,7 @@ build/
 cmake-build-*/
 katago-src/
 compile-build/
+dist/
 
 # KataGo 运行时产物
 KataGoData/

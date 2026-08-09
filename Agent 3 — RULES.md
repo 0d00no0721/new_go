@@ -1,9 +1,17 @@
 # Agent 3 — RULES：Ban 阶段控制器实现报告
 
 **角色：** 规则流程工程师 RULES
-**日期：** 2026-08-08
+**日期：** 2026-08-08（FE 代改：2026-08-09）
 **关联计划书：** `新规则实现计划书.md` §7.4（WP4）
 **关联规则：** `新规则.md` §2（Ban选阶段规则）
+
+---
+
+## 更新日志
+
+| 日期 | 角色 | 变更 |
+|------|------|------|
+| 2026-08-09 | FE 代改 | BanController 支持非正方形棋盘（`board_cols`）+ region 默认全棋盘（去 margin=3）+ `check_connectivity` 签名改为 `(board_rows, board_cols, ...)` + `col_to_letter` 扩展到 25 列。test_ban.py 增至 41 用例（+5 非正方形），全过。 |
 
 ---
 
@@ -11,8 +19,8 @@
 
 | 文件 | 行数 | 说明 |
 |------|------|------|
-| `ban_controller.py` | 397 | Ban 阶段控制器全部逻辑 |
-| `test_ban.py` | 342 | 配套测试（36 个用例，全部通过） |
+| `ban_controller.py` | 414 | Ban 阶段控制器全部逻辑（支持非正方形 + 全棋盘 region） |
+| `test_ban.py` | 390 | 配套测试（41 个用例，全部通过） |
 
 ---
 
@@ -57,16 +65,23 @@ gtp_to_point("D7") # → (7, 4)
 ```python
 @dataclass
 class BanConfig:
-    board_size: int = 20            # 棋盘尺寸（1~MAX_LEN）
-    ban_count: int = 10             # Ban 操作总次数
-    sequence: str = "ABBAABBABA"    # 序列（每个字符代表谁执行该次 ban）
-    region_row_min: int = 4         # 可 ban 区域：行下界
-    region_row_max: int = 17        # 可 ban 区域：行上界
-    region_col_min: int = 4         # 可 ban 区域：列下界
-    region_col_max: int = 17        # 可 ban 区域：列上界
-    max_violations: int = 3         # 违例上限（达到即判负）
-    ai_candidate_sample: int = 20   # AI 评估时候选池抽样大小
+    board_size: int = 20              # 行数（1~25，向后兼容正方形）
+    board_cols: Optional[int] = None  # 列数，None 时等于 board_size（正方形）
+    ban_count: int = 10               # Ban 操作总次数
+    sequence: str = "ABBAABBABA"      # 序列（每个字符代表谁执行该次 ban）
+    region_row_min: int = 1           # 可 ban 区域：行下界（默认全棋盘）
+    region_row_max: int = 0           # 行上界（0 → validate 时填 board_rows）
+    region_col_min: int = 1           # 列下界（默认全棋盘）
+    region_col_max: int = 0           # 列上界（0 → validate 时填 board_cols）
+    max_violations: int = 3           # 违例上限（达到即判负）
+    ai_candidate_sample: int = 20     # AI 评估时候选池抽样大小
 ```
+
+**变更说明（2026-08-09 FE 代改）：**
+- `board_cols` 新增：`None` 时 `validate` 填为 `board_size`（正方形向后兼容）
+- `region_*` 默认改为全棋盘（`row_max=0` → validate 填 `board_rows`）
+- 只读属性 `board_rows`（= `board_size`），`board_cols` 字段（validate 后为 int）
+- `col_to_letter` 扩展到 1-25 列（Z）
 
 `validate()` 方法在构造时自动校验参数合法性。
 
@@ -96,7 +111,10 @@ def check_no_duplicate(row: int, col: int, banned: set) -> BanResult
 ### 5c 全局连通性校验 `check_connectivity`
 
 ```python
-def check_connectivity(board_size: int, banned: set, new_ban: tuple) -> BanResult
+def check_connectivity(board_rows: int, board_cols: int, banned: set, new_ban: tuple) -> BanResult
+```
+
+**变更说明（2026-08-09 FE 代改）：** 签名从 `(board_size, ...)` 改为 `(board_rows, board_cols, ...)` 以支持非正方形棋盘。
 ```
 
 **算法：BFS（广度优先搜索）**
@@ -238,13 +256,14 @@ print(result.concluded_by)   # "complete" | "violation_a" | "violation_b"
 | `TestAIPick` | 5 | 随机始终合法 / 不重复 / auto fallback / mock GTP / 已结束拒绝 |
 | `TestFullFlow` | 3 | 完整 10 次 ban / 重复拒绝 / 连通性阻止切割 |
 | `TestConfig` | 2 | 区域越界校验 / 序列长度校验 |
+| `TestNonSquare` | 5 | 默认正方形 / 非正方形维度 / 边角合法 / 非正方形连通性 / 越界 |
 
 运行命令：
 ```powershell
 $env:PYTHONIOENCODING='utf-8'; python -m pytest test_ban.py -v
 ```
 
-结果：**36 passed, 0 failed**
+结果：**41 passed, 0 failed**（2026-08-09 更新：+5 非正方形测试）
 
 ---
 

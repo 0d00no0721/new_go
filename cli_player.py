@@ -121,8 +121,7 @@ class GtpEngine:
         self._closed = False
 
         try:
-            self._proc = subprocess.Popen(
-                args,
+            popen_kwargs = dict(
                 stdin=subprocess.PIPE,
                 stdout=subprocess.PIPE,
                 stderr=stderr_target,
@@ -130,6 +129,9 @@ class GtpEngine:
                 encoding="utf-8",
                 bufsize=1,  # 行缓冲
             )
+            if sys.platform == "win32":
+                popen_kwargs["creationflags"] = subprocess.CREATE_NO_WINDOW
+            self._proc = subprocess.Popen(args, **popen_kwargs)
         except Exception as e:
             if self._stderr_file:
                 self._stderr_file.close()
@@ -256,8 +258,13 @@ class GtpEngine:
 
     # ── 高级封装 ──
 
-    def boardsize_n(self, n: int, timeout: Optional[float] = None) -> str:
-        return self.send(f"boardsize {n}", timeout=timeout)
+    def boardsize_n(self, n, timeout: Optional[float] = None) -> str:
+        """设置棋盘大小。n 为 int（正方形）或 (rows, cols) tuple（非正方形）。"""
+        if isinstance(n, tuple):
+            cmd = f"boardsize {n[0]}:{n[1]}"
+        else:
+            cmd = f"boardsize {n}"
+        return self.send(cmd, timeout=timeout)
 
     def clear_board(self, timeout: Optional[float] = None) -> str:
         return self.send("clear_board", timeout=timeout)
@@ -306,16 +313,22 @@ class GtpEngine:
 def print_board(
     stones: dict[tuple[int, int], str],
     banned: set[tuple[int, int]],
-    boardsize: int,
+    boardsize,
 ) -> None:
-    """打印棋盘。stones: (row,col)->'B'/'W'；banned 禁点用 X；空点用 ."""
-    cols = "".join(col_to_letter(c) for c in range(1, boardsize + 1))
+    """打印棋盘。stones: (row,col)->'B'/'W'；banned 禁点用 X；空点用 .
+    boardsize: int（正方形）或 (rows, cols) tuple（非正方形）。
+    """
+    if isinstance(boardsize, tuple):
+        rows, cols_n = boardsize
+    else:
+        rows = cols_n = boardsize
+    cols = "".join(col_to_letter(c) for c in range(1, cols_n + 1))
     # 列标头（每两字符一列）
     header = "   " + " ".join(cols)
     print(header)
-    for r in range(boardsize, 0, -1):
+    for r in range(rows, 0, -1):
         parts = [f"{r:>2} "]
-        for c in range(1, boardsize + 1):
+        for c in range(1, cols_n + 1):
             if (r, c) in banned:
                 parts.append("X")
             elif (r, c) in stones:
@@ -334,7 +347,7 @@ def print_board(
 class GameConfig:
     mode: str = "aivai"            # aivai / human
     color: str = "B"               # human 模式下人类棋色 B/W
-    boardsize: int = 20
+    boardsize: "int | tuple[int, int]" = 20  # int（正方形）或 (rows, cols) tuple（非正方形）
     engine: str = DEFAULT_ENGINE
     model: str = DEFAULT_MODEL
     config: str = DEFAULT_CONFIG
@@ -346,12 +359,22 @@ class GameConfig:
     sgf_out: Optional[str] = None  # SGF 导出路径（None=自动生成名）
     no_sgf: bool = False           # 不导出 SGF
 
+    @property
+    def board_rows(self) -> int:
+        return self.boardsize[0] if isinstance(self.boardsize, tuple) else self.boardsize
+
+    @property
+    def board_cols(self) -> int:
+        return self.boardsize[1] if isinstance(self.boardsize, tuple) else self.boardsize
+
 
 # ── 对局主流程 ──────────────────────────────────────────────────────────────
 
 def run_game(cfg: GameConfig) -> None:
     """完整对局：Ban 阶段 → 正式对局 → 终局数子。"""
     boardsize = cfg.boardsize
+    board_rows = cfg.board_rows
+    board_cols = cfg.board_cols
 
     # 选手 ↔ 棋色
     human_color = cfg.color                # "B" 或 "W"
@@ -385,13 +408,9 @@ def run_game(cfg: GameConfig) -> None:
             pass  # 某些引擎版本可能无 get_komi，忽略
 
         # ═══════════ Ban 阶段 ═══════════
-        margin = 3
         ban_cfg = BanConfig(
-            board_size=boardsize,
-            region_row_min=margin + 1,
-            region_row_max=boardsize - margin,
-            region_col_min=margin + 1,
-            region_col_max=boardsize - margin,
+            board_size=board_rows,
+            board_cols=board_cols,
         )
         bc = BanController(ban_cfg)
 
@@ -440,7 +459,7 @@ def run_game(cfg: GameConfig) -> None:
                     if bc.is_finished:
                         break
 
-            print_board({}, bc.banned, boardsize)
+            print_board({}, bc.banned, (board_rows, board_cols))
 
         # Ban 结果
         result = bc.get_result()
@@ -462,7 +481,7 @@ def run_game(cfg: GameConfig) -> None:
         print(f"\n=== 正式对局（黑先，komi={cfg.komi}）===")
 
         engines = {"B": eng_black, "W": eng_white}
-        stones: dict[tuple[int, int], str] = {}
+        board = ReplayBoard(board_rows, board_cols, set(bc.banned))
         turn = "B"  # 黑先 = 选手 B
         consecutive_pass = 0
         move_no = 0
@@ -522,7 +541,7 @@ def run_game(cfg: GameConfig) -> None:
                     row, col = None, None
 
                 if row is not None:
-                    stones[(row, col)] = turn
+                    board.play(turn, row, col)
                     # 检测 AI 是否落在禁点上（ENGINE 实装后正常应避开）
                     if (row, col) in bc.banned:
                         print(f"  [异常] {coord} 落在禁点上！"
@@ -534,7 +553,7 @@ def run_game(cfg: GameConfig) -> None:
                     except RuntimeError as e:
                         print(f"  [警告] 同步对手引擎失败: {e}")
 
-                print_board(stones, bc.banned, boardsize)
+                print_board(board.stones, bc.banned, (board_rows, board_cols))
 
             turn = "W" if turn == "B" else "B"
 
@@ -621,7 +640,11 @@ def review_sgf(path: str) -> None:
         role = "黑" if color == "B" else "白"
         print(f"  {i + 1:>3}. {role} {coord}")
 
-    board = ReplayBoard(game.boardsize, ban_set)
+    if isinstance(game.boardsize, tuple):
+        sgf_rows, sgf_cols = game.boardsize
+    else:
+        sgf_rows = sgf_cols = game.boardsize
+    board = ReplayBoard(sgf_rows, sgf_cols, ban_set)
     for color, coord in game.moves:
         if coord.lower() == "pass":
             continue
@@ -642,8 +665,8 @@ def build_parser() -> argparse.ArgumentParser:
                    help="对局模式：aivai=AI对AI，human=人对AI（默认 aivai）")
     p.add_argument("--color", choices=["B", "W"], default="B",
                    help="human 模式下人类棋色：B=黑先手，W=白后手（默认 B）")
-    p.add_argument("--boardsize", type=int, default=20,
-                   help="棋盘尺寸（默认 20）")
+    p.add_argument("--boardsize", default="20",
+                   help="棋盘尺寸：int（正方形，默认 20）或 R:C（非正方形，如 15:20）")
     p.add_argument("--engine", default=DEFAULT_ENGINE, help="katago.exe 路径")
     p.add_argument("--model", default=DEFAULT_MODEL, help="权重文件路径")
     p.add_argument("--config", default=DEFAULT_CONFIG, help="GTP 配置文件路径")
@@ -680,10 +703,18 @@ def main(argv: Optional[list[str]] = None) -> int:
             raise
         return 0
 
+    # 解析 boardsize：int 或 "R:C"
+    bs_str = args.boardsize
+    if ":" in bs_str:
+        parts = bs_str.split(":")
+        boardsize = (int(parts[0]), int(parts[1]))
+    else:
+        boardsize = int(bs_str)
+
     cfg = GameConfig(
         mode=args.mode,
         color=args.color,
-        boardsize=args.boardsize,
+        boardsize=boardsize,
         engine=args.engine,
         model=args.model,
         config=args.config,
@@ -696,7 +727,8 @@ def main(argv: Optional[list[str]] = None) -> int:
         no_sgf=args.no_sgf,
     )
 
-    print(f"模式: {cfg.mode} | 棋盘: {cfg.boardsize}路 | "
+    bs_desc = f"{cfg.board_rows}x{cfg.board_cols}" if isinstance(cfg.boardsize, tuple) else f"{cfg.boardsize}"
+    print(f"模式: {cfg.mode} | 棋盘: {bs_desc} | "
           f"ban策略: {cfg.ban_strategy} | komi: {cfg.komi}")
     if cfg.mode == "human":
         print(f"人类: {'黑(先手,选手B)' if cfg.color == 'B' else '白(后手,选手A)'}")

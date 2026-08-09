@@ -208,11 +208,14 @@ def import_sgf(path: str) -> SgfGame:
 class ReplayBoard:
     """简易围棋棋盘，支持落子 + 提子，用于 SGF 复盘展示。
 
-    禁点视为棋盘外（不产生气、不可落子）。
+    禁点视为棋盘外（不产生气、不可落子）。支持非正方形棋盘。
     """
 
-    def __init__(self, size: int, bans: Optional[set[tuple[int, int]]] = None):
-        self.size = size
+    def __init__(self, rows: int, cols: int,
+                 bans: Optional[set[tuple[int, int]]] = None):
+        self.rows = rows
+        self.cols = cols
+        self.size = rows  # 只读兼容（正方形时 = 边长）
         self.bans: set[tuple[int, int]] = bans or set()
         self.grid: dict[tuple[int, int], str] = {}
 
@@ -220,7 +223,7 @@ class ReplayBoard:
         """落子并处理提子。color: 'B' or 'W'。"""
         if (row, col) in self.bans or (row, col) in self.grid:
             return
-        if not (1 <= row <= self.size and 1 <= col <= self.size):
+        if not (1 <= row <= self.rows and 1 <= col <= self.cols):
             return
         self.grid[(row, col)] = color
         opp = "W" if color == "B" else "B"
@@ -252,7 +255,7 @@ class ReplayBoard:
         for r, c in group:
             for dr, dc in ((1, 0), (-1, 0), (0, 1), (0, -1)):
                 nr, nc = r + dr, c + dc
-                if 1 <= nr <= self.size and 1 <= nc <= self.size:
+                if 1 <= nr <= self.rows and 1 <= nc <= self.cols:
                     if (nr, nc) not in self.grid and (nr, nc) not in self.bans:
                         libs.add((nr, nc))
         return len(libs)

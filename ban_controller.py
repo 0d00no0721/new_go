@@ -1,5 +1,5 @@
 """
-Ban 阶段控制器 — 20路Ban选围棋
+Ban 阶段控制器 — 20路Ban选围棋（支持非正方形棋盘）
 
 职责：
   1. Ban 序列推进（A→B→B→A→A→B→B→A→A→B，可配置）
@@ -7,6 +7,9 @@ Ban 阶段控制器 — 20路Ban选围棋
   3. 人类输入通道
   4. AI 自动选点（随机策略 + GTP 评估策略）
   5. 违例计数与判负
+
+支持非正方形棋盘：BanConfig(board_size=rows, board_cols=cols)，
+board_cols=None 时为正方形（cols=rows）。region 默认全棋盘。
 """
 
 from __future__ import annotations
@@ -19,12 +22,12 @@ from typing import Callable, Iterable, Optional, Sequence
 
 # ── 坐标工具 ────────────────────────────────────────────────────────────────
 
-COL_LETTERS = "ABCDEFGHJKLMNOPQRSTU"
+COL_LETTERS = "ABCDEFGHJKLMNOPQRSTUVWXYZ"  # 跳过 I，1-25 列
 
 def col_to_letter(col: int) -> str:
-    """1-based column → letter (skip I).  1→A, 8→H, 9→J, 20→U."""
-    if col < 1 or col > 20:
-        raise ValueError(f"列编号必须在 1-20 之间，收到 {col}")
+    """1-based column → letter (skip I).  1→A, 8→H, 9→J, 20→U, 25→Z."""
+    if col < 1 or col > 25:
+        raise ValueError(f"列编号必须在 1-25 之间，收到 {col}")
     return COL_LETTERS[col - 1]
 
 def letter_to_col(letter: str) -> int:
@@ -47,24 +50,36 @@ def gtp_to_point(s: str) -> tuple[int, int]:
 @dataclass
 class BanConfig:
     """Ban 阶段全部可配置参数。"""
-    board_size: int = 20
+    board_size: int = 20              # 行数（向后兼容，正方形时唯一尺寸）
+    board_cols: Optional[int] = None  # 列数，None 时 validate 填为 board_size（正方形）
     ban_count: int = 10
     sequence: str = "ABBAABBABA"
-    region_row_min: int = 4
-    region_row_max: int = 17
-    region_col_min: int = 4
-    region_col_max: int = 17
+    region_row_min: int = 1           # 默认全棋盘
+    region_row_max: int = 0           # 0 → validate 时填 board_rows
+    region_col_min: int = 1           # 默认全棋盘
+    region_col_max: int = 0           # 0 → validate 时填 board_cols
     max_violations: int = 3
     ai_candidate_sample: int = 20
 
     def validate(self) -> None:
-        bs = self.board_size
-        if self.region_row_min < 1 or self.region_row_max > bs:
-            raise ValueError(f"region rows must be within [1, {bs}]")
-        if self.region_col_min < 1 or self.region_col_max > bs:
-            raise ValueError(f"region cols must be within [1, {bs}]")
+        # board_cols=None → 等于 board_size（正方形）
+        if self.board_cols is None:
+            self.board_cols = self.board_size
+        # 填充 region_max=0 为全棋盘
+        if self.region_row_max == 0:
+            self.region_row_max = self.board_rows
+        if self.region_col_max == 0:
+            self.region_col_max = self.board_cols
+        if self.region_row_min < 1 or self.region_row_max > self.board_rows:
+            raise ValueError(f"region rows must be within [1, {self.board_rows}]")
+        if self.region_col_min < 1 or self.region_col_max > self.board_cols:
+            raise ValueError(f"region cols must be within [1, {self.board_cols}]")
         if len(self.sequence) != self.ban_count:
             raise ValueError(f"sequence length {len(self.sequence)} != ban_count {self.ban_count}")
+
+    @property
+    def board_rows(self) -> int:
+        return self.board_size
 
 
 @dataclass
@@ -113,25 +128,25 @@ def check_no_duplicate(row: int, col: int, banned: set[tuple[int, int]]) -> BanR
 
 
 def check_connectivity(
-    board_size: int,
+    board_rows: int,
+    board_cols: int,
     banned: set[tuple[int, int]],
     new_ban: tuple[int, int],
 ) -> BanResult:
     """BFS: ban 之后所有可落子点必须保持全局四向连通。
 
-    可落子点 = 整个棋盘去掉所有禁点。边界（行列 <1 或 >board_size）是自然障碍。
+    可落子点 = 整个棋盘去掉所有禁点。边界（行列 <1 或越界）是自然障碍。
     允许局部小型空洞。只要有一个种子能连到所有可落子点即可。
     """
-    bs = board_size
     all_banned = banned | {new_ban}
 
     def in_bounds(r: int, c: int) -> bool:
-        return 1 <= r <= bs and 1 <= c <= bs and (r, c) not in all_banned
+        return 1 <= r <= board_rows and 1 <= c <= board_cols and (r, c) not in all_banned
 
     all_playable: list[tuple[int, int]] = [
         (r, c)
-        for r in range(1, bs + 1)
-        for c in range(1, bs + 1)
+        for r in range(1, board_rows + 1)
+        for c in range(1, board_cols + 1)
         if (r, c) not in all_banned
     ]
 
@@ -217,7 +232,8 @@ class BanController:
     def _all_checks(self, row: int, col: int) -> Iterable[BanResult]:
         yield check_region(row, col, self.config)
         yield check_no_duplicate(row, col, self.banned)
-        yield check_connectivity(self.config.board_size, self.banned, (row, col))
+        yield check_connectivity(self.config.board_rows, self.config.board_cols,
+                                 self.banned, (row, col))
 
     def _apply(self, row: int, col: int, source: str) -> None:
         player = self.current_player
@@ -246,7 +262,7 @@ class BanController:
             row, col = gtp_to_point(label)
         except (ValueError, IndexError):
             return BanResult(False, f"无效坐标: {label}")
-        if not (1 <= row <= self.config.board_size and 1 <= col <= self.config.board_size):
+        if not (1 <= row <= self.config.board_rows and 1 <= col <= self.config.board_cols):
             return BanResult(False, f"坐标越界: {label}")
         return self.submit(row, col, source="human")
 
@@ -260,7 +276,8 @@ class BanController:
             for c in range(cfg.region_col_min, cfg.region_col_max + 1):
                 if (r, c) in self.banned:
                     continue
-                if not check_connectivity(cfg.board_size, self.banned, (r, c)).valid:
+                if not check_connectivity(cfg.board_rows, cfg.board_cols,
+                                          self.banned, (r, c)).valid:
                     continue
                 candidates.append((r, c))
         return candidates

@@ -31,10 +31,11 @@ class TestCoords(unittest.TestCase):
         self.assertEqual(col_to_letter(9), "J")
         self.assertEqual(col_to_letter(10), "K")
         self.assertEqual(col_to_letter(20), "U")
+        self.assertEqual(col_to_letter(25), "Z")
         with self.assertRaises(ValueError):
             col_to_letter(0)
         with self.assertRaises(ValueError):
-            col_to_letter(21)
+            col_to_letter(26)
 
     def test_letter_to_col(self):
         self.assertEqual(letter_to_col("A"), 1)
@@ -65,7 +66,8 @@ class TestCoords(unittest.TestCase):
 
 class TestCheckRegion(unittest.TestCase):
     def setUp(self):
-        self.cfg = BanConfig()
+        self.cfg = BanConfig(region_row_min=4, region_row_max=17,
+                             region_col_min=4, region_col_max=17)
 
     def test_inside_region(self):
         self.assertTrue(check_region(4, 4, self.cfg).valid)
@@ -108,17 +110,17 @@ class TestCheckConnectivity(unittest.TestCase):
 
     def test_empty_board_connected(self):
         self.assertTrue(
-            check_connectivity(self.BS, set(), (10, 10)).valid
+            check_connectivity(self.BS, self.BS, set(), (10, 10)).valid
         )
 
     def test_single_ban_on_empty(self):
         self.assertTrue(
-            check_connectivity(self.BS, set(), (4, 4)).valid
+            check_connectivity(self.BS, self.BS, set(), (4, 4)).valid
         )
 
     def test_small_hole_allowed(self):
         banned = {(10, 10), (10, 11), (11, 10), (11, 11)}
-        r = check_connectivity(self.BS, banned | {(12, 12)}, (12, 12))
+        r = check_connectivity(self.BS, self.BS, banned | {(12, 12)}, (12, 12))
         self.assertTrue(r.valid,
                         msg="制造局部小型空洞应该是允许的")
 
@@ -126,32 +128,32 @@ class TestCheckConnectivity(unittest.TestCase):
         # Ban entire row 10: points (10,1) through (10,20)
         full_row_bans = {(10, c) for c in range(1, 21)}
         full_row_bans.discard((10, 20))  # leaves one gap → connected
-        r = check_connectivity(self.BS, full_row_bans, (10, 20))
+        r = check_connectivity(self.BS, self.BS, full_row_bans, (10, 20))
         self.assertFalse(r.valid, "Row 10 almost fully banned should disconnect")
 
     def test_ban_single_edge_point_ok(self):
-        r = check_connectivity(self.BS, set(), (10, 1))
+        r = check_connectivity(self.BS, self.BS, set(), (10, 1))
         self.assertTrue(r.valid, "Ban at column 1 within the board should be fine")
 
     def test_cut_corner_trap(self):
         # Ban line from (4,10) to (20, 10) - but (1,1)-(3,3) are corner escape
         banned = {(r, 10) for r in range(4, 21)}
         self.assertTrue(
-            check_connectivity(self.BS, banned, (10, 5)).valid
+            check_connectivity(self.BS, self.BS, banned, (10, 5)).valid
         )
 
     def test_edge_bans_dont_block_edges(self):
         # Ban entire row 4 (through the region). Points above row 4 are
         # 1-3 (edges), points below row 4 are 5-20 — they must stay connected.
         row4_banned = {(4, c) for c in range(1, 21)}
-        r = check_connectivity(self.BS, row4_banned, (4, 1))
+        r = check_connectivity(self.BS, self.BS, row4_banned, (4, 1))
         self.assertFalse(r.valid, "Banning entire row 4 should disconnect top from bottom")
 
     def test_connectivity_full_col_cuts(self):
         # Ban col 5 fully from row 1 through 20 — should disconnect left/right
         col_bans = {(r, 5) for r in range(1, 21)}
         col_bans.discard((10, 5))  # leave one gap → should still disconnect
-        r = check_connectivity(self.BS, col_bans, (10, 5))
+        r = check_connectivity(self.BS, self.BS, col_bans, (10, 5))
         self.assertFalse(r.valid,
                          "Banning col 5 nearly fully should disconnect left/right")
 
@@ -187,7 +189,8 @@ class TestSequence(unittest.TestCase):
         self.assertIn((4, 4), bc.banned)
 
     def test_submit_label_out_of_region(self):
-        bc = BanController()
+        bc = BanController(BanConfig(region_row_min=4, region_row_max=17,
+                                     region_col_min=4, region_col_max=17))
         r = bc.submit_label("C3")
         self.assertFalse(r.valid)
         self.assertIn("不在 ban 区域内", r.reason)
@@ -196,8 +199,11 @@ class TestSequence(unittest.TestCase):
 # ── 违例判负 ────────────────────────────────────────────────────────────────
 
 class TestViolations(unittest.TestCase):
+    REGION_CFG = BanConfig(region_row_min=4, region_row_max=17,
+                           region_col_min=4, region_col_max=17)
+
     def test_three_violations_lose(self):
-        bc = BanController()
+        bc = BanController(self.REGION_CFG)
         for _ in range(3):
             r = bc.submit(1, 1, source="test")  # 区域外
             self.assertFalse(r.valid)
@@ -206,7 +212,7 @@ class TestViolations(unittest.TestCase):
         self.assertEqual(bc.violations["A"], 3)
 
     def test_violations_per_player(self):
-        bc = BanController()
+        bc = BanController(self.REGION_CFG)
         # A violates once
         bc.submit(1, 1, source="test")
         self.assertEqual(bc.violations["A"], 1)
@@ -223,7 +229,7 @@ class TestViolations(unittest.TestCase):
         self.assertEqual(bc.step, 1)
 
     def test_violation_reset_on_new_game(self):
-        bc = BanController()
+        bc = BanController(self.REGION_CFG)
         bc.submit(1, 1, source="test")
         bc.submit(1, 1, source="test")
         self.assertEqual(bc.violations["A"], 2)
@@ -336,6 +342,48 @@ class TestConfig(unittest.TestCase):
     def test_validate_sequence_length(self):
         with self.assertRaises(ValueError):
             BanConfig(ban_count=5, sequence="ABABAB").validate()
+
+
+# ── 非正方形棋盘测试 ──────────────────────────────────────────────────────
+
+class TestNonSquare(unittest.TestCase):
+    def test_default_is_square(self):
+        cfg = BanConfig()
+        cfg.validate()
+        self.assertEqual(cfg.board_rows, 20)
+        self.assertEqual(cfg.board_cols, 20)
+
+    def test_non_square_dims(self):
+        cfg = BanConfig(board_size=15, board_cols=20)
+        cfg.validate()
+        self.assertEqual(cfg.board_rows, 15)
+        self.assertEqual(cfg.board_cols, 20)
+        self.assertEqual(cfg.region_row_max, 15)  # 全棋盘
+        self.assertEqual(cfg.region_col_max, 20)
+
+    def test_ban_at_corner_legal(self):
+        bc = BanController(BanConfig(board_size=15, board_cols=20))
+        # (15, 20) 是右下角，全棋盘区域 → 合法
+        r = bc.submit_label("U15")
+        self.assertTrue(r.valid, r.reason)
+        self.assertIn((15, 20), bc.banned)
+
+    def test_non_square_connectivity(self):
+        # 15 行 20 列，ban 整行应切断
+        row_bans = {(7, c) for c in range(1, 21)}
+        row_bans.discard((7, 20))
+        r = check_connectivity(15, 20, row_bans, (7, 20))
+        self.assertFalse(r.valid)
+
+    def test_non_square_out_of_bounds(self):
+        bc = BanController(BanConfig(board_size=15, board_cols=20))
+        # 第 16 行越界
+        r = bc.submit_label("A16")
+        self.assertFalse(r.valid)
+        self.assertIn("越界", r.reason)
+        # 第 21 列越界
+        r2 = bc.submit_label("V1")
+        self.assertFalse(r2.valid)
 
 
 if __name__ == "__main__":
