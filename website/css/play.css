@@ -1,0 +1,258 @@
+/* ==========================================================================
+   play.css — 20路Ban选围棋 在线对弈页专属样式
+   复用 style.css 的 CSS 变量（--bg/--accent/--card/--border/--ban-red 等）
+   ========================================================================== */
+
+/* ── 对弈页主布局 ──────────────────────────────────────────── */
+.play-layout {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: 24px;
+    align-items: start;
+    margin-top: 24px;
+}
+
+/* ── 尺寸选择条 ────────────────────────────────────────────── */
+.setup-bar {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 22px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex-wrap: wrap;
+}
+.setup-bar label {
+    font-size: 15px;
+    color: var(--text-soft);
+    font-weight: 600;
+}
+.setup-bar select {
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 15px;
+    font-family: var(--sans);
+    cursor: pointer;
+}
+.setup-bar select:focus { outline: 2px solid var(--accent); }
+.setup-bar .dim-sep { color: var(--text-soft); }
+.setup-bar .btn { margin-left: auto; }
+
+/* ── 棋盘区 ────────────────────────────────────────────────── */
+.board-wrap {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: var(--shadow);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.board-svg {
+    width: 100%;
+    height: auto;
+    max-width: 640px;
+    display: block;
+}
+/* SVG 元素样式 */
+.board-svg .grid-line { stroke: var(--text); stroke-width: 1; }
+.board-svg .star-point { fill: var(--text); }
+.board-svg .coord-label {
+    fill: var(--text-soft);
+    font-family: var(--sans);
+    font-size: 11px;
+    text-anchor: middle;
+    dominant-baseline: central;
+    user-select: none;
+}
+.board-svg .stone-black { fill: #141414; stroke: #000; stroke-width: 0.5; }
+.board-svg .stone-white { fill: #f8f8f8; stroke: #9a9a9a; stroke-width: 1; }
+.board-svg .last-mark { fill: var(--ban-red); pointer-events: none; }
+.board-svg .dead-mark {
+    stroke: var(--ban-red);
+    stroke-width: 2.5;
+    pointer-events: none;
+}
+.board-svg .dead-stone { opacity: 0.45; }
+.board-svg .hover-cell {
+    fill: transparent;
+    cursor: pointer;
+}
+.board-svg .hover-cell:hover { fill: rgba(139, 90, 43, 0.15); }
+.board-svg .hover-cell.disabled { cursor: not-allowed; }
+.board-svg .hover-cell.disabled:hover { fill: transparent; }
+
+/* ── 状态面板 ──────────────────────────────────────────────── */
+.status-panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+    position: sticky;
+    top: 72px;
+}
+.status-panel h2 {
+    font-family: var(--serif);
+    font-size: 18px;
+    color: var(--text);
+    margin: 0 0 14px 0;
+    padding-left: 0;
+    border-left: none;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 10px;
+}
+.status-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 7px 0;
+    font-size: 14px;
+    border-bottom: 1px dotted var(--border);
+}
+.status-row:last-of-type { border-bottom: none; }
+.status-row .label { color: var(--text-soft); }
+.status-row .value { font-weight: 600; color: var(--text); }
+.status-row .value.accent { color: var(--accent); }
+.status-row .value.ban-red { color: var(--ban-red); }
+
+.phase-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+.phase-setup { background: #e3f2fd; color: #1565c0; border: 1px solid #90caf9; }
+.phase-ban { background: #fff3e0; color: #e65100; border: 1px solid #ffcc80; }
+.phase-play { background: #e8f5e9; color: #2e7d32; border: 1px solid #a5d6a7; }
+.phase-dead { background: #fce4ec; color: #c62828; border: 1px solid #f48fb1; }
+.phase-over { background: #f3e5f5; color: #6a1b9a; border: 1px solid #ce93d8; }
+
+.ban-list {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--accent-hover);
+    word-break: break-all;
+    line-height: 1.5;
+    margin-top: 4px;
+}
+
+.controls {
+    margin-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.controls .btn {
+    width: 100%;
+    padding: 10px;
+    font-size: 15px;
+}
+.controls .btn:disabled {
+    background: #ccc;
+    color: #888;
+    cursor: not-allowed;
+    border-color: #bbb;
+}
+.controls .btn:disabled:hover { transform: none; background: #ccc; }
+
+/* ── 提示框（替代 alert） ────────────────────────────────── */
+.toast {
+    position: fixed;
+    top: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--text);
+    color: var(--bg);
+    padding: 12px 24px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    z-index: 1000;
+    font-size: 14px;
+    max-width: 90%;
+    opacity: 0;
+    transition: opacity 0.25s, top 0.25s;
+    pointer-events: none;
+}
+.toast.show { opacity: 1; top: 90px; }
+.toast.error { background: var(--ban-red); color: #fff; }
+
+/* ── 结果框 ──────────────────────────────────────────────── */
+.result-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(43, 29, 14, 0.5);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 999;
+    padding: 20px;
+}
+.result-modal.show { display: flex; }
+.result-box {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    padding: 28px 32px;
+    max-width: 460px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+.result-box h3 {
+    font-family: var(--serif);
+    font-size: 22px;
+    color: var(--text);
+    margin: 0 0 6px 0;
+    text-align: center;
+}
+.result-box .result-line {
+    font-family: var(--serif);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--accent);
+    text-align: center;
+    margin: 10px 0 18px;
+}
+.result-box .result-winner-B { color: #141414; }
+.result-box .result-winner-W { color: #888; }
+.result-detail {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 14px 0;
+    font-size: 14px;
+}
+.result-detail td {
+    padding: 8px 12px;
+    border-bottom: 1px dotted var(--border);
+}
+.result-detail td:first-child { color: var(--text-soft); }
+.result-detail td:last-child { text-align: right; font-weight: 600; }
+.result-box .btn { width: 100%; margin-top: 14px; }
+
+/* ── 响应式 ────────────────────────────────────────────────── */
+@media (max-width: 860px) {
+    .play-layout {
+        grid-template-columns: 1fr;
+    }
+    .status-panel {
+        position: static;
+        top: auto;
+    }
+    .board-svg { max-width: 100%; }
+}
+@media (max-width: 720px) {
+    .setup-bar { padding: 14px 16px; gap: 10px; }
+    .setup-bar .btn { margin-left: 0; width: 100%; }
+    .board-wrap { padding: 10px; }
+    .status-panel { padding: 16px; }
+}

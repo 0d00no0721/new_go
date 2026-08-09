@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>在线对弈 — 20路Ban选围棋</title>
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/play.css">
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav">
+            <a href="index.html" class="nav-brand">20路Ban选围棋</a>
+            <button class="nav-toggle" aria-label="菜单">☰</button>
+            <ul class="nav-links">
+                <li><a href="index.html">首页</a></li>
+                <li><a href="rules.html">规则</a></li>
+                <li><a href="download.html">下载</a></li>
+                <li><a href="play.html">在线对弈</a></li>
+                <li><a href="about.html">关于</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <h1 class="page-title">在线对弈</h1>
+        <p class="page-subtitle">人 vs 人 本地双人完整对弈 · Ban 选阶段 + 正式对局 + 数子</p>
+
+        <div class="setup-bar" id="setup-bar">
+            <label for="sel-rows">行数</label>
+            <select id="sel-rows">
+                <option>9</option><option>10</option><option>11</option><option>12</option>
+                <option>13</option><option>14</option><option>15</option><option>16</option>
+                <option>17</option><option>18</option><option selected>20</option>
+                <option>21</option><option>22</option><option>23</option><option>24</option><option>25</option>
+            </select>
+            <span class="dim-sep">×</span>
+            <label for="sel-cols">列数</label>
+            <select id="sel-cols">
+                <option>9</option><option>10</option><option>11</option><option>12</option>
+                <option>13</option><option>14</option><option>15</option><option>16</option>
+                <option>17</option><option>18</option><option selected>20</option>
+                <option>21</option><option>22</option><option>23</option><option>24</option><option>25</option>
+            </select>
+            <button class="btn btn-primary" id="btn-start-bar">开始对局</button>
+        </div>
+
+        <div class="play-layout">
+            <div class="board-wrap">
+                <svg class="board-svg" id="board-svg" xmlns="http://www.w3.org/2000/svg"></svg>
+            </div>
+
+            <aside class="status-panel" id="status-panel">
+                <h2>对局状态</h2>
+                <div class="status-content"></div>
+                <div class="controls" id="controls"></div>
+            </aside>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-brand">20路Ban选围棋</div>
+        <p>GitHub 仓库：<a href="https://github.com/0d00no0721/new_go">github.com/0d00no0721/new_go</a></p>
+    </footer>
+
+    <div class="toast" id="toast"></div>
+
+    <div class="result-modal" id="result-modal">
+        <div class="result-box"></div>
+    </div>
+
+    <script src="./js/ban-engine.js"></script>
+    <script src="./js/main.js"></script>
+    <script src="./js/play.js"></script>
+</body>
+</html>

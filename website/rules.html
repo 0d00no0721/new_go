@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>规则详解 — 20路Ban选围棋</title>
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav">
+            <a href="index.html" class="nav-brand">20路Ban选围棋</a>
+            <button class="nav-toggle" aria-label="菜单">☰</button>
+            <ul class="nav-links">
+                <li><a href="index.html">首页</a></li>
+                <li><a href="rules.html">规则</a></li>
+                <li><a href="download.html">下载</a></li>
+                <li><a href="play.html">在线对弈</a></li>
+                <li><a href="about.html">关于</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <h1 class="page-title">规则详解</h1>
+        <p class="page-subtitle">20路Ban选围棋 完整规则（V1.0 修订版）</p>
+
+        <div class="callout">
+            <div class="callout-title">快速理解</div>
+            <p>20×20 棋盘的围棋变体。正式对局前，双方按固定顺序选定 10 个永久禁点（Ban选阶段），随后进行标准围棋对局。黑贴 4.25 子，因有效点位为偶数且贴子含半子，可杜绝和棋。Ban 仅作用于中央 14×14 区域，边角定式依然有效，属微调型变体。</p>
+        </div>
+
+        <section>
+            <h2>1 棋盘与棋子</h2>
+            <table>
+                <tr><th>项</th><th>设定</th></tr>
+                <tr><td>棋盘</td><td>20×20 交叉点棋盘，坐标行、列编号均为 1‑20</td></tr>
+                <tr><td>选手 B</td><td>执黑，正式对局先手</td></tr>
+                <tr><td>选手 A</td><td>执白，正式对局后手</td></tr>
+                <tr><td>整体对局</td><td>分两阶段——Ban选阶段 → 正式围棋对局阶段</td></tr>
+            </table>
+        </section>
+
+        <section>
+            <h2>2 Ban选阶段规则</h2>
+
+            <h3>2.1 Ban选顺序</h3>
+            <p>严格固定序列，总计 10 次 ban 操作，A 执行 5 次，B 执行 5 次。每次当前选手选择一个合法点位标记为禁点。</p>
+            <div class="sequence">
+                A<span class="arrow">→</span>B<span class="arrow">→</span>B<span class="arrow">→</span>A<span class="arrow">→</span>A<span class="arrow">→</span>B<span class="arrow">→</span>B<span class="arrow">→</span>A<span class="arrow">→</span>A<span class="arrow">→</span>B
+            </div>
+
+            <h3>2.2 Ban选选点硬性约束</h3>
+            <p>须同时满足以下三项：</p>
+            <ul>
+                <li><strong>区域限制</strong>：ban 点位只能落在中间 14×14 区域（行 4~17，列 4~17）。外围边角（行 1‑3、18‑20；列 1‑3、18‑20）完全禁止 ban，始终可落子。</li>
+                <li><strong>不可重复</strong>：不得选择已被标记为禁点的位置。</li>
+                <li><strong>全局连通性约束</strong>：执行 ban 后，所有可落子点必须保持<strong>全局四向连通</strong>（仅横竖移动，禁点与边界视为障碍）。若本次 ban 导致棋盘被分割为两块或多块互不可达的可落子区域，则选点非法，须重新选择。
+                    <ul>
+                        <li>备注：允许制造局部小型空洞，不禁止。</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h3>2.3 禁点通用属性</h3>
+            <ul>
+                <li>禁点永久不可落子（黑白均不可）。</li>
+                <li>计算气时等价于棋盘外部。</li>
+                <li>终局数子时不计入任何一方地域。</li>
+            </ul>
+
+            <h3>2.4 Ban阶段结束判定</h3>
+            <p>完成全部 10 次 ban 操作后，标记所有禁点，Ban 阶段结束。</p>
+        </section>
+
+        <section>
+            <h2>3 正式对局阶段（围棋本体规则）</h2>
+            <table>
+                <tr><th>项</th><th>规则</th></tr>
+                <tr><td>行棋顺序</td><td>黑棋（B）下第一手，之后黑白交替落子</td></tr>
+                <tr><td>落子合法性</td><td>必须落在非禁点、空交叉点；遵循标准围棋气、提子、禁自杀、劫争规则（禁点视作外边界参与气计算）</td></tr>
+                <tr><td>终局条件</td><td>双方连续 pass（虚着），或一方主动认输</td></tr>
+                <tr><td>死活判定</td><td>沿用中国围棋规则，终局确认死棋并提取</td></tr>
+            </table>
+        </section>
+
+        <section>
+            <h2>4 胜负计算（数子规则）</h2>
+
+            <h3>4.1 基础数值</h3>
+            <table>
+                <tr><th>项</th><th>数值</th></tr>
+                <tr><td>有效总点位</td><td>400（总） − 10（禁点） = <strong>390 点</strong></td></tr>
+                <tr><td>基准对半</td><td>390 ÷ 2 = <strong>195 子</strong>（平局基准线）</td></tr>
+                <tr><td>贴子设定</td><td>黑棋因拥有先手、连续 ban 及最后一手 ban 的三重优势，设定<strong>黑贴 4 又 1/4 子（即 4.25 子）</strong></td></tr>
+            </table>
+
+            <h3>4.2 胜负判定公式</h3>
+            <div class="formula">
+                <p><strong>黑胜条件</strong>：黑方总子数 − 4.25 ＞ 195 → <strong>黑方总子数 ＞ 199.25</strong>（即至少 200 子）</p>
+                <p><strong>白胜条件</strong>：白方总子数 ＋ 4.25 ＞ 195 → <strong>白方总子数 ＞ 190.75</strong>（即至少 191 子）</p>
+            </div>
+            <p>因子数为整数，且 390 为偶数，该贴子设定可有效避免和棋（199.25 与 190.75 之间无整数交点）。</p>
+            <div class="note">休闲娱乐局可协商降低贴子。</div>
+        </section>
+
+        <section>
+            <h2>5 违例处理</h2>
+            <table>
+                <tr><th>阶段</th><th>违例情形</th><th>处理</th></tr>
+                <tr><td>Ban 阶段</td><td>越界、重复、割裂棋盘</td><td>该 ban 无效，重新选点；累计 <strong>3 次</strong>违例直接判负</td></tr>
+                <tr><td>正式对局</td><td>落子禁点</td><td>落子无效，撤回重下；累计 <strong>3 次</strong>违例判负</td></tr>
+            </table>
+        </section>
+
+        <section>
+            <h2>6 流程总览</h2>
+            <ol>
+                <li>初始化 20×20 空棋盘，无禁点。</li>
+                <li>按顺序执行 10 次 ban，每次校验三项约束。</li>
+                <li>标记 10 个禁点。</li>
+                <li>黑棋下第一手，交替行棋，执行标准围棋规则。</li>
+                <li>终局确认死棋，数子，按修正后的贴子公式判定胜负。</li>
+            </ol>
+        </section>
+
+        <section>
+            <h2>7 补充备注</h2>
+            <p>以下为设计说明，非强制规则：</p>
+            <ul>
+                <li>Ban 仅作用于中腹 14×14，边角完整保留，角部定式与常规布局依然有效。</li>
+                <li>连通性规则保证全局战场唯一，避免分割成互不干扰的独立对局。</li>
+                <li>仅禁用 10 个点位，属于微调型变体，未颠覆基础棋理。</li>
+            </ul>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-brand">20路Ban选围棋</div>
+        <p>GitHub 仓库：<a href="https://github.com/0d00no0721/new_go">github.com/0d00no0721/new_go</a></p>
+    </footer>
+
+    <script src="./js/main.js"></script>
+</body>
+</html>

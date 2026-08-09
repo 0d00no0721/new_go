@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>20路Ban选围棋 — KataGo 驱动的围棋变体</title>
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav">
+            <a href="index.html" class="nav-brand">20路Ban选围棋</a>
+            <button class="nav-toggle" aria-label="菜单">☰</button>
+            <ul class="nav-links">
+                <li><a href="index.html">首页</a></li>
+                <li><a href="rules.html">规则</a></li>
+                <li><a href="download.html">下载</a></li>
+                <li><a href="play.html">在线对弈</a></li>
+                <li><a href="about.html">关于</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <h1>20路Ban选围棋</h1>
+            <p class="subtitle">KataGo 驱动的围棋变体<span class="sep">·</span>20路<span class="sep">·</span>Ban选<span class="sep">·</span>贴目 4.25</p>
+            <div class="hero-cta">
+                <a href="rules.html" class="btn btn-primary btn-large">查看规则</a>
+                <a href="download.html" class="btn btn-secondary btn-large">下载</a>
+            </div>
+        </section>
+
+        <section class="features">
+            <div class="feature-card">
+                <h3>20路棋盘</h3>
+                <p>20×20 交叉点，比标准 19 路多出 76 个点位。Ban 选仅限中央 14×14 区域，边角完整保留，角部定式依然有效。</p>
+            </div>
+            <div class="feature-card">
+                <h3>Ban选阶段</h3>
+                <p>正式对局前，按 A→B→B→A→A→B→B→A→A→B 顺序选定 10 个永久禁点。所有可落子点须保持全局四向连通。</p>
+            </div>
+            <div class="feature-card">
+                <h3>贴目 4.25</h3>
+                <p>有效点位 390，基准 195 子。黑贴 4.25 子，黑方需 > 199.25 子（至少 200）获胜，杜绝和棋。</p>
+            </div>
+            <div class="feature-card">
+                <h3>KataGo AI 对弈</h3>
+                <p>基于 KataGo v1.16.4 源码改造，支持人 vs AI 与 AI vs AI 对局。禁点等价于棋盘外边界，合法性零改动。</p>
+            </div>
+        </section>
+
+        <section class="status-summary">
+            <h2>项目状态</h2>
+            <p>核心交付已完成，5 个 agent（INFRA / ENGINE / RULES / FE / QA）全部就绪，DoD 验收 8 条全覆盖。里程碑 M0–M7 逐项达成，测试套件 24 passed + 5 xfail + 3 slow（约 105 秒），DoD 8 条全覆盖。整体完成度约 92%，当前处于总验收阶段。</p>
+            <div class="status-badges">
+                <span class="badge badge-ok">M7 总验收 ✅</span>
+                <span class="badge badge-ok">DoD 8/8</span>
+                <span class="badge badge-info">24 passed + 5 xfail</span>
+                <span class="badge badge-ok">RTX 5060 · 429 visits/s</span>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-brand">20路Ban选围棋</div>
+        <p>GitHub 仓库：<a href="https://github.com/0d00no0721/new_go">github.com/0d00no0721/new_go</a></p>
+    </footer>
+
+    <script src="./js/main.js"></script>
+</body>
+</html>

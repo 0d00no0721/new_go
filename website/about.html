@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>关于 — 20路Ban选围棋</title>
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav">
+            <a href="index.html" class="nav-brand">20路Ban选围棋</a>
+            <button class="nav-toggle" aria-label="菜单">☰</button>
+            <ul class="nav-links">
+                <li><a href="index.html">首页</a></li>
+                <li><a href="rules.html">规则</a></li>
+                <li><a href="download.html">下载</a></li>
+                <li><a href="play.html">在线对弈</a></li>
+                <li><a href="about.html">关于</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <h1 class="page-title">关于本项目</h1>
+        <p class="page-subtitle">技术架构 · 开发过程 · 里程碑</p>
+
+        <section>
+            <h2>项目背景</h2>
+            <p>本项目在 <strong>KataGo v1.16.4</strong> 源码上实现「20路Ban选围棋」变体。由于预编译版 <code>katago.exe</code> 中 <code>Board::MAX_LEN = 19</code>，执行 <code>boardsize 20</code> 会直接报错，且 GTP <code>komi</code> 命令拒绝非整半贴目，因此必须对源码进行改造并重新编译。</p>
+            <p>核心理念是<strong>禁点 = <code>C_WALL</code></strong>——即 KataGo 原生表示「棋盘外」的颜色。将禁点标记为 <code>C_WALL</code> 后，合法性判断、气计算、提子、劫争<strong>零改动</strong>即可正确处理（禁点天然被视为外边界）。仅需修改数子逻辑（排除 <code>C_WALL</code>）、神经网络输入（feature 0）与新增 3 个 GTP 命令，合计约 90 行代码改动，分散在 4 个源文件中。</p>
+        </section>
+
+        <section>
+            <h2>技术架构</h2>
+            <p>以下为 KataGo 源码改造要点（详见仓库 <code>Agent 2 — ENGINE.md</code>）：</p>
+            <table>
+                <tr><th>改动</th><th>位置 / 方式</th></tr>
+                <tr><td><code>Board::MAX_LEN</code> 19→25</td><td><code>katago-src/cpp/game/board.h:15</code></td></tr>
+                <tr><td>禁点数据结构 + 数子修复</td><td><code>board.h</code> / <code>board.cpp</code>（<code>calculateArea</code> + <code>calculateIndependentLifeArea</code> 各 +1 条件）</td></tr>
+                <tr><td>NN 输入 feature 0</td><td><code>nninputs.cpp</code>（7 处 fillRow 加 <code>C_WALL</code> 判断）</td></tr>
+                <tr><td>新 GTP 命令</td><td><code>gtp.cpp</code>：<code>kata-set-bans</code> / <code>kata-clear-bans</code> / <code>kata-query-bans</code></td></tr>
+                <tr><td>komi 4.25</td><td><code>-override-config ignoreGTPAndForceKomi=4.25</code>（无需改码）</td></tr>
+                <tr><td>20 路网络</td><td><code>gtpForceMaxNNSize=true</code>（19 路网络自动 pad 到 MAX_LEN，无需改码）</td></tr>
+            </table>
+            <div class="note"><code>analysis.cpp</code> 仍校验半整数 komi，4.25 在 analysis 模式被拒——首期仅支持 GTP 对弈，analysis 模式二期处理。</div>
+        </section>
+
+        <section>
+            <h2>多 Agent 协作</h2>
+            <p>项目采用 5 个 agent 并行开发，各维护独立反馈文档：</p>
+            <table>
+                <tr><th>Agent</th><th>文档</th><th>职责</th></tr>
+                <tr><td>INFRA</td><td><code>Agent 1 — INFRA.md</code></td><td>构建工具链与环境（MSVC + vcpkg + OpenCL 编译脚本）</td></tr>
+                <tr><td>ENGINE</td><td><code>Agent 2 — ENGINE.md</code></td><td>KataGo 源码改造（MAX_LEN / 禁点 / NN输入 / GTP 命令）</td></tr>
+                <tr><td>RULES</td><td><code>Agent 3 — RULES.md</code></td><td>Ban 阶段控制器（序列推进 / 三项校验 / AI 选点）</td></tr>
+                <tr><td>FE</td><td><code>Agent 4 — FE.md</code></td><td>对弈工具（CLI + tkinter GUI + SGF 读写）</td></tr>
+                <tr><td>QA</td><td><code>Agent 5 — QA.md</code></td><td>测试与验收（测试矩阵 + 端到端 + 性能基准）</td></tr>
+            </table>
+        </section>
+
+        <section>
+            <h2>里程碑</h2>
+            <table>
+                <tr><th>里程碑</th><th>内容</th><th>状态</th><th>完成度</th></tr>
+                <tr><td>M0</td><td>治理基线 + 接口约定冻结</td><td>✅</td><td>100%</td></tr>
+                <tr><td>M1</td><td>工具链就绪，能编出等价 OpenCL exe</td><td>✅</td><td>100%</td></tr>
+                <tr><td>M2</td><td>20×20 + komi4.25 原生可跑</td><td>✅</td><td>100%</td></tr>
+                <tr><td>M3</td><td>禁点引擎 + 新 GTP 命令通过单测</td><td>✅</td><td>100%</td></tr>
+                <tr><td>M4</td><td>Ban 控制器联调通过</td><td>✅</td><td>100%</td></tr>
+                <tr><td>M5</td><td>对弈工具 AI vs AI 全流程</td><td>✅</td><td>100%</td></tr>
+                <tr><td>M6</td><td>人 vs AI + 复盘 + 参数面</td><td>🔄</td><td>85%</td></tr>
+                <tr><td>M7</td><td>总验收 + 文档</td><td>✅</td><td>95%</td></tr>
+            </table>
+        </section>
+
+        <section>
+            <h2>技术栈</h2>
+            <table>
+                <tr><th>层</th><th>技术</th></tr>
+                <tr><td>引擎</td><td>KataGo v1.16.4（C++ 源码改造）</td></tr>
+                <tr><td>编译</td><td>MSVC 19.44 + CMake 3.31 + vcpkg（OpenCL / zlib）</td></tr>
+                <tr><td>后端</td><td>OpenCL（RTX 5060 Laptop，429 visits/s）</td></tr>
+                <tr><td>前端</td><td>Python + tkinter（GUI）+ CLI</td></tr>
+                <tr><td>棋谱</td><td>SGF 格式（AE 属性标记禁点）</td></tr>
+                <tr><td>测试</td><td>pytest（24 passed + 5 xfail + 3 slow）</td></tr>
+            </table>
+        </section>
+
+        <section>
+            <h2>源码仓库</h2>
+            <p>完整源码、文档与测试位于 GitHub：</p>
+            <p><a href="https://github.com/0d00no0721/new_go">https://github.com/0d00no0721/new_go</a></p>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-brand">20路Ban选围棋</div>
+        <p>GitHub 仓库：<a href="https://github.com/0d00no0721/new_go">github.com/0d00no0721/new_go</a></p>
+    </footer>
+
+    <script src="./js/main.js"></script>
+</body>
+</html>
