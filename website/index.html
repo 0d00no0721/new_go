@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>new_go · 围棋变体实验</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+            background: #faf6ee;
+            color: #3a2a1a;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+        }
+        .title {
+            font-size: 48px;
+            font-weight: 700;
+            color: #8b5a2b;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+        .subtitle {
+            font-size: 16px;
+            color: #8a7a6a;
+            margin-bottom: 48px;
+        }
+        .cards {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+            max-width: 460px;
+        }
+        .card {
+            display: block;
+            background: #fff;
+            border: 1px solid #e0d5c0;
+            border-radius: 14px;
+            padding: 24px 28px;
+            text-decoration: none;
+            color: #3a2a1a;
+            transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+        }
+        .card:hover {
+            border-color: #b8860b;
+            box-shadow: 0 4px 16px rgba(139, 90, 43, 0.12);
+            transform: translateY(-2px);
+        }
+        .card-name {
+            font-size: 20px;
+            font-weight: 600;
+            color: #8b5a2b;
+            margin-bottom: 6px;
+        }
+        .card-desc {
+            font-size: 14px;
+            color: #7a6a5a;
+            line-height: 1.6;
+        }
+        .card-arrow {
+            float: right;
+            color: #b8860b;
+            font-size: 20px;
+        }
+        .placeholder {
+            background: transparent;
+            border: 1px dashed #d0c5b0;
+            border-radius: 14px;
+            padding: 24px 28px;
+        }
+        .placeholder .card-name { color: #b0a590; }
+        .placeholder .card-desc { color: #b0a590; }
+        .repo {
+            margin-top: 40px;
+            font-size: 13px;
+        }
+        .repo a {
+            color: #8b5a2b;
+            text-decoration: none;
+            border-bottom: 1px solid #d0c5b0;
+        }
+        .repo a:hover { border-color: #8b5a2b; }
+        @media (max-width: 480px) {
+            .title { font-size: 36px; }
+            .card { padding: 20px 22px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="title">new_go</div>
+    <div class="subtitle">20路围棋变体实验</div>
+    <div class="cards">
+        <a class="card" href="ban-selection/">
+            <span class="card-arrow">&rarr;</span>
+            <div class="card-name">Ban选围棋</div>
+            <div class="card-desc">20路棋盘 · Ban 选阶段 10 禁点 · 黑贴 4.25 子。在线对弈、规则详解与下载。</div>
+        </a>
+        <div class="placeholder">
+            <div class="card-name">更多方向</div>
+            <div class="card-desc">敬请期待</div>
+        </div>
+    </div>
+    <div class="repo">GitHub 仓库：<a href="https://github.com/0d00no0721/new_go">github.com/0d00no0721/new_go</a></div>
+</body>
+</html>

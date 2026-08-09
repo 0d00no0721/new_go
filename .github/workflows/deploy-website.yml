@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
     paths:
+      - website/**
       - ban-selection/website/**
       - .github/workflows/**
   workflow_dispatch:
@@ -22,9 +23,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+      - name: Assemble site
+        run: |
+          mkdir -p staging/ban-selection
+          cp -r website/. staging/
+          cp -r ban-selection/website/. staging/ban-selection/
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: ban-selection/website
+          path: staging
   deploy:
     needs: build
     runs-on: ubuntu-latest
