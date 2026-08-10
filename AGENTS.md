@@ -11,6 +11,7 @@
 | 目录 | 方向 | 入手文档 |
 |------|------|----------|
 | `ban-selection/` | Ban 选围棋 | `ban-selection/AGENTS.md` → `ban-selection/进度总览.md` |
+| `position-value-research/` | 位置价值研究（前置研究）| `position-value-research/README.md` |
 
 新增方向时在此表格追加一行，并在工作区根建对应子目录。
 
