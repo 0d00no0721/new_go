@@ -16,6 +16,7 @@
 | 2026-08-10 | ▶️ 进行中 | 工作流+zip脚手架+README+smoke | 见下方"本轮完成"；zip 组装与 Pages 联调仍阻塞 |
 | 2026-08-10 | ✅ 完成 | README komi 填 7.5 + .gitignore | README 填 7.5；根 .gitignore 补 `*.err`/`*.pid`；Agent 2 exe+komi / Agent 3 规则文档 / Agent 4 website 均已就绪 |
 | 2026-08-10 | ✅ 完成 | 删除 NOTIFY_Agent1（已落地） | 通知文件清理 |
+| 2026-08-11 | ✅ 完成 | WeightedGo.exe 打包 | build.bat + WeightedGo.spec（仿 ban-selection），PyInstaller --onefile --windowed，dist\WeightedGo.exe 可双击启动，AIvsAI 模式可用 |
 
 ---
 

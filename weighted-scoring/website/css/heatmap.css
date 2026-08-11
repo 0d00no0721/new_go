@@ -115,9 +115,45 @@
     line-height: 1.7;
 }
 
+/* ── 2D / 3D 视图切换 ────────────────────────────────────── */
+.view-switch {
+    display: inline-flex;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--card);
+    margin-bottom: 16px;
+}
+.view-switch button {
+    border: none;
+    background: transparent;
+    padding: 8px 20px;
+    font-family: var(--sans);
+    font-size: 14px;
+    color: var(--text-soft);
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+.view-switch button + button { border-left: 1px solid var(--border); }
+.view-switch button:hover { background: var(--card-hover); }
+.view-switch button.active { background: var(--accent); color: #fff; }
+
+/* ── 3D 热力图容器 ───────────────────────────────────────── */
+#heatmap-3d {
+    width: 100%;
+    height: 560px;
+    border-radius: var(--radius);
+    overflow: hidden;
+    display: none;
+    background: var(--card);
+}
+#heatmap-3d.active { display: block; }
+#heatmap-3d canvas { display: block; width: 100%; height: 100%; }
+
 /* ── 响应式 ──────────────────────────────────────────────── */
 @media (max-width: 860px) {
     .heatmap-layout { grid-template-columns: 1fr; }
     .info-panel { position: static; top: auto; }
     .board-svg { max-width: 100%; }
+    #heatmap-3d { height: 440px; }
 }

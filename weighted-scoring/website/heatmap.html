@@ -24,11 +24,17 @@
 
     <main>
         <h1 class="page-title">权重热力图</h1>
-        <p class="page-subtitle">19×19 位置权重表 · 悬停任意点查看 W 值</p>
+        <p class="page-subtitle">19×19 位置权重表 · 悬停任意点查看 W 值 · 支持 2D / 3D 视图</p>
+
+        <div class="view-switch" id="view-switch" role="group" aria-label="视图切换">
+            <button type="button" id="view-2d" class="active" data-view="2d">2D</button>
+            <button type="button" id="view-3d" data-view="3d">3D</button>
+        </div>
 
         <div class="heatmap-layout">
             <div class="board-wrap">
                 <svg class="board-svg" id="heatmap-svg" xmlns="http://www.w3.org/2000/svg"></svg>
+                <div id="heatmap-3d" aria-label="3D 权重热力图"></div>
             </div>
 
             <aside class="info-panel">
@@ -64,5 +70,15 @@
     <script src="./js/weight_data.js"></script>
     <script src="./js/heatmap.js"></script>
     <script src="./js/main.js"></script>
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+        }
+    }
+    </script>
+    <script type="module" src="./js/heatmap3d.js"></script>
 </body>
 </html>
