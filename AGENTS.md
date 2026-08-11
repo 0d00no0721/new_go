@@ -12,9 +12,7 @@
 |------|------|----------|
 | `ban-selection/` | Ban 选围棋 | `ban-selection/AGENTS.md` → `ban-selection/进度总览.md` |
 | `position-value-research/` | 位置价值研究（前置研究）| `position-value-research/README.md` |
-| `weighted-scoring/` | 加权点目围棋 | `weighted-scoring/进度总览.md` |
-
-新增方向时在此表格追加一行，并在工作区根建对应子目录。
+| `weighted-scoring/` | 加权点目围棋 | `weighted-scoring/AGENTS.md` → `weighted-scoring/进度总览.md` |
 
 ## 约定
 
