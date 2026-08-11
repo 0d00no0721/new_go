@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>权重热力图 — 加权点目围棋</title>
+    <link rel="stylesheet" href="./css/style.css">
+    <link rel="stylesheet" href="./css/heatmap.css">
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav">
+            <a href="index.html" class="nav-brand">加权点目围棋</a>
+            <button class="nav-toggle" aria-label="菜单">☰</button>
+            <ul class="nav-links">
+                <li><a href="index.html">首页</a></li>
+                <li><a href="rules.html">规则</a></li>
+                <li><a href="heatmap.html">权重热力图</a></li>
+                <li><a href="download.html">下载</a></li>
+                <li><a href="about.html">关于</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <h1 class="page-title">权重热力图</h1>
+        <p class="page-subtitle">19×19 位置权重表 · 悬停任意点查看 W 值</p>
+
+        <div class="heatmap-layout">
+            <div class="board-wrap">
+                <svg class="board-svg" id="heatmap-svg" xmlns="http://www.w3.org/2000/svg"></svg>
+            </div>
+
+            <aside class="info-panel">
+                <h2>权重信息</h2>
+                <div class="heatmap-stat" id="heatmap-stat"></div>
+                <div id="info-box">将鼠标移到棋盘上<br>悬停查看该点权重</div>
+
+                <div class="legend-block">
+                    <div class="legend-title">色阶（diverging）</div>
+                    <div id="legend-gradient"></div>
+                    <div class="legend-scale">
+                        <span>0.53 冷</span>
+                        <span>1.0 中性</span>
+                        <span>2.76 暖</span>
+                    </div>
+                </div>
+
+                <p class="legend-note">
+                    颜色越暖（红、橙）权重越高，表示该位置"低效"需高分补偿；
+                    越冷（蓝）权重越低，表示该位置"高效"。天元（K10）W=1.72 亮，
+                    星位（D16）W=0.74 暗——这就是"下天元值得考虑"的来源。
+                </p>
+            </aside>
+        </div>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-brand">加权点目围棋</div>
+        <p>GitHub 仓库：<a href="https://github.com/0d00no0721/new_go">github.com/0d00no0721/new_go</a></p>
+    </footer>
+
+    <script src="./js/scoring.js"></script>
+    <script src="./js/weight_data.js"></script>
+    <script src="./js/heatmap.js"></script>
+    <script src="./js/main.js"></script>
+</body>
+</html>

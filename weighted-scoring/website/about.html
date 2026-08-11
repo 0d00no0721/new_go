@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>关于 — 加权点目围棋</title>
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav">
+            <a href="index.html" class="nav-brand">加权点目围棋</a>
+            <button class="nav-toggle" aria-label="菜单">☰</button>
+            <ul class="nav-links">
+                <li><a href="index.html">首页</a></li>
+                <li><a href="rules.html">规则</a></li>
+                <li><a href="heatmap.html">权重热力图</a></li>
+                <li><a href="download.html">下载</a></li>
+                <li><a href="about.html">关于</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <h1 class="page-title">关于本项目</h1>
+        <p class="page-subtitle">技术架构 · 迭代过程 · 里程碑</p>
+
+        <section>
+            <h2>项目背景</h2>
+            <p>本项目在 <strong>KataGo v1.16.4</strong> 源码（fresh clone）上实现「加权点目围棋」变体。核心思想：用位置权重表替代标准数子"每点 1 目"的假设，使中央、边、角各位置的<strong>加权占领价值趋同</strong>，逆转"金角银边草肚皮"。</p>
+            <p>与 ban-selection（20 路 Ban 选）相比，本方向是微调型变体：保留 19 路标准棋盘与对弈流程，仅改<strong>数子逻辑</strong>——每个棋子和独占空按其权重 W 计值。</p>
+        </section>
+
+        <section>
+            <h2>引擎改造</h2>
+            <table>
+                <tr><th>改动</th><th>位置 / 方式</th></tr>
+                <tr><td>权重表 <code>pointWeights[MAX_ARR_SIZE]</code></td><td><code>board.h</code> / <code>board.cpp</code>（每点权重，默认 1.0）</td></tr>
+                <tr><td>加权数子</td><td><code>boardhistory.cpp</code>（±1 → ±W×point，int score → double）</td></tr>
+                <tr><td>搜索集成</td><td><code>searchresults.cpp</code>（scoreMean += Σ(W−1)×ownership）</td></tr>
+                <tr><td>GTP 命令</td><td><code>gtp.cpp</code>：kata-load-weights / kata-clear-weights / kata-query-weights</td></tr>
+            </table>
+            <div class="note">回归保证：W=1 时搜索调整量数学为零（Σown == Σ(W×own) 当 W≡1），引擎退化为标准 KataGo。</div>
+        </section>
+
+        <section>
+            <h2>迭代收敛过程</h2>
+            <p>用"贡献反馈 + 阻尼修正"循环收敛权重表：</p>
+            <div class="formula">
+                <p>W_new = W_old × (C / contrib)^β，阻尼 β=0.5，clamp ≤ 3.0</p>
+            </div>
+            <table>
+                <tr><th>轮次</th><th>center 贡献</th><th>corner34</th><th>center/corner 比</th></tr>
+                <tr><td>W=1 基线</td><td>0.30</td><td>0.54</td><td>0.56x</td></tr>
+                <tr><td>W₂</td><td>0.63</td><td>0.48</td><td>1.31x（过冲）</td></tr>
+                <tr><td>W₄（定稿）</td><td><strong>0.55</strong></td><td><strong>0.50</strong></td><td><strong>1.10x</strong></td></tr>
+            </table>
+            <p>最终各区域加权贡献均收敛至星位 ±15% 以内，权重表定稿（<code>weight_table_final.txt</code>）。</p>
+        </section>
+
+        <section>
+            <h2>多 Agent 协作</h2>
+            <table>
+                <tr><th>Agent</th><th>文档</th><th>职责</th></tr>
+                <tr><td>INFRA</td><td><code>Agent 1 — INFRA.md</code></td><td>构建工具链与环境（MSVC + vcpkg + OpenCL）</td></tr>
+                <tr><td>ENGINE</td><td><code>Agent 2 — ENGINE.md</code></td><td>KataGo 加权改造 + komi 决策（7.5，标准中国贴目）</td></tr>
+                <tr><td>RULES</td><td><code>Agent 3 — RULES.md</code></td><td>加权数子 scoring.py / scoring.js + 规则文档</td></tr>
+                <tr><td>FE</td><td><code>Agent 4 — FE.md</code></td><td>CLI 对弈 + tkinter GUI + 官网 / 热力图</td></tr>
+                <tr><td>QA</td><td><code>Agent 5 — QA.md</code></td><td>测试与验收（单元 + 端到端 + 引擎一致性）</td></tr>
+            </table>
+        </section>
+
+        <section>
+            <h2>里程碑</h2>
+            <table>
+                <tr><th>里程碑</th><th>内容</th><th>状态</th></tr>
+                <tr><td>M0</td><td>方向初始化 + 接口冻结</td><td>✅</td></tr>
+                <tr><td>M1</td><td>加权引擎改造编译通过</td><td>✅</td></tr>
+                <tr><td>M2</td><td>权重表迭代收敛（ΣW=421.59）</td><td>✅</td></tr>
+                <tr><td>M3</td><td>scoring.py / scoring.js 双端口一致</td><td>✅</td></tr>
+                <tr><td>M4</td><td>komi 决策（7.5）</td><td>✅</td></tr>
+                <tr><td>M5</td><td>CLI / GUI / 官网交付</td><td>✅</td></tr>
+                <tr><td>M6</td><td>总验收 + 文档</td><td>🔄</td></tr>
+            </table>
+        </section>
+
+        <section>
+            <h2>技术栈</h2>
+            <table>
+                <tr><th>层</th><th>技术</th></tr>
+                <tr><td>引擎</td><td>KataGo v1.16.4（C++ 源码改造）</td></tr>
+                <tr><td>编译</td><td>MSVC 19.44 + CMake 3.31 + vcpkg（OpenCL / zlib）</td></tr>
+                <tr><td>后端</td><td>OpenCL（RTX 5060 Laptop）</td></tr>
+                <tr><td>前端</td><td>Python + tkinter（GUI）+ CLI</td></tr>
+                <tr><td>官网</td><td>静态 HTML + CSS + JS（SVG 热力图）</td></tr>
+                <tr><td>数子</td><td>scoring.py / scoring.js（双端口一致）</td></tr>
+                <tr><td>棋谱</td><td>SGF 格式（含权重元信息）</td></tr>
+            </table>
+        </section>
+
+        <section>
+            <h2>源码仓库</h2>
+            <p>完整源码、文档与测试位于 GitHub：</p>
+            <p><a href="https://github.com/0d00no0721/new_go">https://github.com/0d00no0721/new_go</a></p>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-brand">加权点目围棋</div>
+        <p>GitHub 仓库：<a href="https://github.com/0d00no0721/new_go">github.com/0d00no0721/new_go</a></p>
+    </footer>
+
+    <script src="./js/main.js"></script>
+</body>
+</html>

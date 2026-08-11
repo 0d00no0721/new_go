@@ -1,0 +1,123 @@
+/* ==========================================================================
+   heatmap.css — 加权点目权重热力图页专属样式
+   复用 style.css 的 CSS 变量（--bg/--accent/--card/--border 等）
+   ========================================================================== */
+
+/* ── 热力图主区 ──────────────────────────────────────────── */
+.heatmap-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 300px;
+    gap: 24px;
+    align-items: start;
+    margin-top: 24px;
+}
+
+.board-wrap {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: var(--shadow);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.board-svg {
+    width: 100%;
+    height: auto;
+    max-width: 640px;
+    display: block;
+}
+.board-svg .heat-cell { stroke: none; }
+.board-svg .heat-cell:hover { stroke: #2b1d0e; stroke-width: 2; cursor: pointer; opacity: 0.9; }
+.board-svg .heat-cell.pinned { stroke: #2b1d0e; stroke-width: 3; }
+.board-svg .coord-label {
+    fill: var(--text-soft);
+    font-family: var(--sans);
+    font-size: 11px;
+    text-anchor: middle;
+    user-select: none;
+    pointer-events: none;
+}
+
+/* ── 信息侧栏 ────────────────────────────────────────────── */
+.info-panel {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px;
+    box-shadow: var(--shadow);
+    position: sticky;
+    top: 72px;
+}
+.info-panel h2 {
+    font-family: var(--serif);
+    font-size: 18px;
+    color: var(--text);
+    margin: 0 0 14px 0;
+    padding-left: 0;
+    border-left: none;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 10px;
+}
+.heatmap-stat {
+    font-size: 13.5px;
+    color: var(--text-soft);
+    line-height: 1.8;
+    margin-bottom: 16px;
+}
+#info-box {
+    font-family: var(--mono);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    text-align: center;
+    margin-bottom: 18px;
+}
+#info-box .coord {
+    display: block;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--accent);
+}
+#info-box .wt {
+    display: block;
+    font-size: 15px;
+    color: var(--text);
+    margin-top: 4px;
+}
+
+/* ── 图例 ──────────────────────────────────────────────── */
+.legend-block { margin-top: 6px; }
+.legend-title {
+    font-size: 13px;
+    color: var(--text-soft);
+    margin-bottom: 6px;
+}
+#legend-gradient {
+    height: 16px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+}
+.legend-scale {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    color: var(--text-soft);
+    margin-top: 4px;
+}
+.legend-note {
+    margin-top: 14px;
+    font-size: 13px;
+    color: var(--text-soft);
+    line-height: 1.7;
+}
+
+/* ── 响应式 ──────────────────────────────────────────────── */
+@media (max-width: 860px) {
+    .heatmap-layout { grid-template-columns: 1fr; }
+    .info-panel { position: static; top: auto; }
+    .board-svg { max-width: 100%; }
+}

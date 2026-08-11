@@ -6,6 +6,7 @@ on:
     paths:
       - website/**
       - ban-selection/website/**
+      - weighted-scoring/website/**
       - .github/workflows/**
   workflow_dispatch:
 
@@ -25,9 +26,12 @@ jobs:
       - uses: actions/configure-pages@v5
       - name: Assemble site
         run: |
-          mkdir -p staging/ban-selection
+          mkdir -p staging/ban-selection staging/weighted-scoring
           cp -r website/. staging/
           cp -r ban-selection/website/. staging/ban-selection/
+          if [ -d weighted-scoring/website ]; then
+            cp -r weighted-scoring/website/. staging/weighted-scoring/
+          fi
       - uses: actions/upload-pages-artifact@v3
         with:
           path: staging

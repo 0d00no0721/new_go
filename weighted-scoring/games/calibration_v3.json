@@ -1,0 +1,352 @@
+{
+  "meta": {
+    "weights_file": "E:/katago_cache/weight_table_final.txt",
+    "komis": [
+      6.5,
+      7.0,
+      7.5,
+      8.0
+    ],
+    "games_per_komi": 8,
+    "max_moves": 100,
+    "visits": 128,
+    "timestamp": "2026-08-10 17:39:49"
+  },
+  "results": {
+    "6.5": [
+      {
+        "komi": 6.5,
+        "game_idx": 0,
+        "final_score": "B+1.5",
+        "winner": "B",
+        "margin": 1.5,
+        "num_moves": 100,
+        "elapsed": 45.8
+      },
+      {
+        "komi": 6.5,
+        "game_idx": 1,
+        "final_score": "B+3.5",
+        "winner": "B",
+        "margin": 3.5,
+        "num_moves": 100,
+        "elapsed": 40.8
+      },
+      {
+        "komi": 6.5,
+        "game_idx": 2,
+        "final_score": "W+1.5",
+        "winner": "W",
+        "margin": 1.5,
+        "num_moves": 100,
+        "elapsed": 34.1
+      },
+      {
+        "komi": 6.5,
+        "game_idx": 3,
+        "final_score": "W+0.5",
+        "winner": "W",
+        "margin": 0.5,
+        "num_moves": 100,
+        "elapsed": 28.1
+      },
+      {
+        "komi": 6.5,
+        "game_idx": 4,
+        "final_score": "B+0.5",
+        "winner": "B",
+        "margin": 0.5,
+        "num_moves": 100,
+        "elapsed": 34.2
+      },
+      {
+        "komi": 6.5,
+        "game_idx": 5,
+        "final_score": "B+0.5",
+        "winner": "B",
+        "margin": 0.5,
+        "num_moves": 100,
+        "elapsed": 39.0
+      },
+      {
+        "komi": 6.5,
+        "game_idx": 6,
+        "final_score": "W+3.5",
+        "winner": "W",
+        "margin": 3.5,
+        "num_moves": 100,
+        "elapsed": 2208.5
+      },
+      {
+        "komi": 6.5,
+        "game_idx": 7,
+        "final_score": "W+0.5",
+        "winner": "W",
+        "margin": 0.5,
+        "num_moves": 100,
+        "elapsed": 26.6
+      }
+    ],
+    "7.0": [
+      {
+        "komi": 7.0,
+        "game_idx": 0,
+        "final_score": "W+1.0",
+        "winner": "W",
+        "margin": 1.0,
+        "num_moves": 100,
+        "elapsed": 28.4
+      },
+      {
+        "komi": 7.0,
+        "game_idx": 1,
+        "final_score": "B+1.0",
+        "winner": "B",
+        "margin": 1.0,
+        "num_moves": 100,
+        "elapsed": 33.2
+      },
+      {
+        "komi": 7.0,
+        "game_idx": 2,
+        "final_score": "0",
+        "winner": "draw",
+        "margin": 0.0,
+        "num_moves": 100,
+        "elapsed": 22.1
+      },
+      {
+        "komi": 7.0,
+        "game_idx": 3,
+        "final_score": "0",
+        "winner": "draw",
+        "margin": 0.0,
+        "num_moves": 100,
+        "elapsed": 28.1
+      },
+      {
+        "komi": 7.0,
+        "game_idx": 4,
+        "final_score": "W+2.0",
+        "winner": "W",
+        "margin": 2.0,
+        "num_moves": 100,
+        "elapsed": 28.8
+      },
+      {
+        "komi": 7.0,
+        "game_idx": 5,
+        "final_score": "0",
+        "winner": "draw",
+        "margin": 0.0,
+        "num_moves": 100,
+        "elapsed": 17.0
+      },
+      {
+        "komi": 7.0,
+        "game_idx": 6,
+        "final_score": "W+1.0",
+        "winner": "W",
+        "margin": 1.0,
+        "num_moves": 100,
+        "elapsed": 17.4
+      },
+      {
+        "komi": 7.0,
+        "game_idx": 7,
+        "final_score": "B+1.0",
+        "winner": "B",
+        "margin": 1.0,
+        "num_moves": 100,
+        "elapsed": 29.7
+      }
+    ],
+    "7.5": [
+      {
+        "komi": 7.5,
+        "game_idx": 0,
+        "final_score": "W+0.5",
+        "winner": "W",
+        "margin": 0.5,
+        "num_moves": 100,
+        "elapsed": 27.8
+      },
+      {
+        "komi": 7.5,
+        "game_idx": 1,
+        "final_score": "B+1.5",
+        "winner": "B",
+        "margin": 1.5,
+        "num_moves": 100,
+        "elapsed": 29.0
+      },
+      {
+        "komi": 7.5,
+        "game_idx": 2,
+        "final_score": "W+1.5",
+        "winner": "W",
+        "margin": 1.5,
+        "num_moves": 100,
+        "elapsed": 28.5
+      },
+      {
+        "komi": 7.5,
+        "game_idx": 3,
+        "final_score": "W+1.5",
+        "winner": "W",
+        "margin": 1.5,
+        "num_moves": 100,
+        "elapsed": 25.0
+      },
+      {
+        "komi": 7.5,
+        "game_idx": 4,
+        "final_score": "W+2.5",
+        "winner": "W",
+        "margin": 2.5,
+        "num_moves": 100,
+        "elapsed": 28.8
+      },
+      {
+        "komi": 7.5,
+        "game_idx": 5,
+        "final_score": "W+0.5",
+        "winner": "W",
+        "margin": 0.5,
+        "num_moves": 100,
+        "elapsed": 26.0
+      },
+      {
+        "komi": 7.5,
+        "game_idx": 6,
+        "final_score": "W+1.5",
+        "winner": "W",
+        "margin": 1.5,
+        "num_moves": 100,
+        "elapsed": 21.2
+      },
+      {
+        "komi": 7.5,
+        "game_idx": 7,
+        "final_score": "W+1.5",
+        "winner": "W",
+        "margin": 1.5,
+        "num_moves": 100,
+        "elapsed": 22.2
+      }
+    ],
+    "8.0": [
+      {
+        "komi": 8.0,
+        "game_idx": 0,
+        "final_score": "0",
+        "winner": "draw",
+        "margin": 0.0,
+        "num_moves": 100,
+        "elapsed": 34.3
+      },
+      {
+        "komi": 8.0,
+        "game_idx": 1,
+        "final_score": "0",
+        "winner": "draw",
+        "margin": 0.0,
+        "num_moves": 100,
+        "elapsed": 24.6
+      },
+      {
+        "komi": 8.0,
+        "game_idx": 2,
+        "final_score": "0",
+        "winner": "draw",
+        "margin": 0.0,
+        "num_moves": 100,
+        "elapsed": 28.0
+      },
+      {
+        "komi": 8.0,
+        "game_idx": 3,
+        "final_score": "W+4.0",
+        "winner": "W",
+        "margin": 4.0,
+        "num_moves": 100,
+        "elapsed": 30.1
+      },
+      {
+        "komi": 8.0,
+        "game_idx": 4,
+        "final_score": "W+2.0",
+        "winner": "W",
+        "margin": 2.0,
+        "num_moves": 100,
+        "elapsed": 25.9
+      },
+      {
+        "komi": 8.0,
+        "game_idx": 5,
+        "final_score": "W+5.0",
+        "winner": "W",
+        "margin": 5.0,
+        "num_moves": 100,
+        "elapsed": 24.6
+      },
+      {
+        "komi": 8.0,
+        "game_idx": 6,
+        "final_score": "W+1.0",
+        "winner": "W",
+        "margin": 1.0,
+        "num_moves": 100,
+        "elapsed": 30.2
+      },
+      {
+        "komi": 8.0,
+        "game_idx": 7,
+        "final_score": "B+2.0",
+        "winner": "B",
+        "margin": 2.0,
+        "num_moves": 100,
+        "elapsed": 31.3
+      }
+    ]
+  },
+  "curve": [
+    {
+      "komi": 6.5,
+      "black_wins": 4,
+      "white_wins": 4,
+      "draws": 0,
+      "black_winrate": 0.5,
+      "avg_black_margin": 0.0,
+      "n": 8
+    },
+    {
+      "komi": 7.0,
+      "black_wins": 2,
+      "white_wins": 3,
+      "draws": 3,
+      "black_winrate": 0.4,
+      "avg_black_margin": -0.4,
+      "n": 8
+    },
+    {
+      "komi": 7.5,
+      "black_wins": 1,
+      "white_wins": 7,
+      "draws": 0,
+      "black_winrate": 0.125,
+      "avg_black_margin": -1.0,
+      "n": 8
+    },
+    {
+      "komi": 8.0,
+      "black_wins": 1,
+      "white_wins": 4,
+      "draws": 3,
+      "black_winrate": 0.2,
+      "avg_black_margin": -2.0,
+      "n": 8
+    }
+  ],
+  "fair_komi_estimate": 6.5
+}

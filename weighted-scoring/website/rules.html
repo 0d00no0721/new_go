@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>规则详解 — 加权点目围棋</title>
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav">
+            <a href="index.html" class="nav-brand">加权点目围棋</a>
+            <button class="nav-toggle" aria-label="菜单">☰</button>
+            <ul class="nav-links">
+                <li><a href="index.html">首页</a></li>
+                <li><a href="rules.html">规则</a></li>
+                <li><a href="heatmap.html">权重热力图</a></li>
+                <li><a href="download.html">下载</a></li>
+                <li><a href="about.html">关于</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <h1 class="page-title">规则详解</h1>
+        <p class="page-subtitle">加权点目围棋 完整规则（参考 <code>加权点目围棋规则.md</code>）</p>
+
+        <div class="callout">
+            <div class="callout-title">快速理解</div>
+            <p>在标准 19 路围棋上，用<strong>位置权重表</strong>替代"每点 1 目"：每个棋子和每个独占空点都按其位置权重 W 计值。中央等"低效区"权重高、角部等"高效区"权重低，使各区加权占领价值趋同，逆转"金角银边草肚皮"，让"下天元"值得考虑。</p>
+        </div>
+
+        <section>
+            <h2>1 权重表</h2>
+            <table>
+                <tr><th>位置</th><th>W</th><th>说明</th></tr>
+                <tr><td>星位 D16</td><td>0.74</td><td>角部高效，权重低</td></tr>
+                <tr><td>天元 K10</td><td>1.72</td><td>中央低效，权重高（逆转金角银边）</td></tr>
+                <tr><td>一线 A19</td><td>0.76</td><td>一线适度低（不鼓励但不禁止）</td></tr>
+                <tr><td>三线边 K17</td><td>1.13</td><td>边中适度补偿</td></tr>
+            </table>
+            <ul>
+                <li><strong>格式</strong>：19×19 row-major 浮点表，第 1 行 = 顶部，第 1 列 = 最左侧。</li>
+                <li><strong>范围</strong>：W ∈ [0.53, 2.76]；<strong>ΣW = 421.59</strong>（标准 19 路 Σ=361）。</li>
+                <li>ΣW &gt; 361 是设计结果：权重是"价值调节器"，中央被赋 &gt;1 补偿其低占领价值，角部 &lt;1 压低其高效价值，无需归一化。</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>2 数子公式（加权 area scoring）</h2>
+            <table>
+                <tr><th>步骤</th><th>说明</th></tr>
+                <tr><td>移除死子</td><td>死子不计入任何一方，其位置变空点参与地域 BFS</td></tr>
+                <tr><td>子分</td><td>每个活子按其位置权重 W 计入其颜色</td></tr>
+                <tr><td>空分（BFS）</td><td>空连通块按邻接棋色判定归属：只邻黑→黑独占空（每点按 W 记黑）、只邻白→白独占空、邻黑白或都不邻→中性不计</td></tr>
+                <tr><td>加权总分</td><td>black_weighted = Σ(黑活子 W) + Σ(黑独占空 W)；white 同理</td></tr>
+            </table>
+            <div class="formula">
+                <p><strong>black_weighted</strong> = Σ(黑活子位置 W) + Σ(黑独占空位置 W)</p>
+                <p><strong>white_weighted</strong> = Σ(白活子位置 W) + Σ(白独占空位置 W)</p>
+            </div>
+        </section>
+
+        <section>
+            <h2>3 贴目与胜负判定</h2>
+            <p>采用改造版 KataGo <code>final_score</code> 的约定（difference-komi）：</p>
+            <div class="formula">
+                <p><strong>finalWhiteMinusBlack</strong> = white_weighted − black_weighted + komi</p>
+                <p>&gt; 0 → 白胜（<code>W+X.X</code>）；&lt; 0 → 黑胜（<code>B+X.X</code>）；== 0 → 和局（<code>0</code>）</p>
+            </div>
+            <p>结果串 1 位小数，与引擎 <code>final_score</code> 完全对齐。默认贴目 ENGINE 采用 <strong>7.5</strong>（标准中国贴目；3 轮标定数据不可信，见收敛报告_komi_utility校准.md §2），app 中可调整。</p>
+        </section>
+
+        <section>
+            <h2>4 回归保证：W=1 ≡ 标准数子</h2>
+            <p>当权重表全为 1.0 时：</p>
+            <ul>
+                <li>black_weighted = 黑活子数 + 黑独占空数 = 黑 area；white 同理。</li>
+                <li>finalWhiteMinusBlack = white_area − black_area + komi = 标准中国数子。</li>
+                <li>即<strong>加权规则退化为标准 area scoring</strong>，并与引擎 <code>final_score</code>（W=1）逐位对照一致。</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>5 死子处理</h2>
+            <p>死子由调用方显式传入（GUI 经引擎终局判定或用户手标）。死子移除后其位置变空点参与地域 BFS：若该空点只邻某色，归该色独占空。与引擎 <code>final_score</code>（Tromp-Taylor 不移除死子）对齐时传空死子集。</p>
+        </section>
+
+        <section>
+            <h2>6 "逆转金角银边"机制</h2>
+            <table>
+                <tr><th>区域</th><th>加权贡献</th><th>vs 星位</th></tr>
+                <tr><td>corner34（星位基准）</td><td>0.50</td><td>100%</td></tr>
+                <tr><td>center（中央）</td><td>0.55</td><td>+10%</td></tr>
+                <tr><td>edge34（边中）</td><td>0.47</td><td>−6%</td></tr>
+                <tr><td>low12（一二线）</td><td>0.52</td><td>+4%</td></tr>
+            </table>
+            <p>机制：中央位置 W 高（如天元 1.72，占领即得高分），角部 W 低（如星位 0.74，占领得分被压低）。AI 在搜索阶段因 <code>scoreMean += Σ(W−1)×ownership</code> 而响应权重，从而增加中央下法。</p>
+        </section>
+
+        <section>
+            <h2>7 实现接口</h2>
+            <p>数子逻辑由 <code>scoring.py</code>（Python，GUI/CLI 共用）与 <code>scoring.js</code>（JS，官网热力图）双端口实现，1:1 对应：</p>
+            <pre># Python
+from scoring import score_game, load_weights
+weights = load_weights("weight_table_final.txt")     # 2D list 19×19
+res = score_game(stones, weights, komi=7.5)         # res["black_weighted"], res["result"] ...</pre>
+            <pre>// JavaScript（官网）
+import { parseWeightTable, scoreGame } from "./js/scoring.js";
+const weights = parseWeightTable(WEIGHT_TABLE_TEXT);
+const res = scoreGame(stonesMap, weights, 7.5, deadSet);</pre>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-brand">加权点目围棋</div>
+        <p>GitHub 仓库：<a href="https://github.com/0d00no0721/new_go">github.com/0d00no0721/new_go</a></p>
+    </footer>
+
+    <script src="./js/main.js"></script>
+</body>
+</html>

@@ -12,6 +12,7 @@
 |------|------|----------|
 | `ban-selection/` | Ban 选围棋 | `ban-selection/AGENTS.md` → `ban-selection/进度总览.md` |
 | `position-value-research/` | 位置价值研究（前置研究）| `position-value-research/README.md` |
+| `weighted-scoring/` | 加权点目围棋 | `weighted-scoring/进度总览.md` |
 
 新增方向时在此表格追加一行，并在工作区根建对应子目录。
 
@@ -24,15 +25,20 @@
 ## GitHub Pages 部署（关键）
 
 - 工作流文件 **必须在根目录** `.github/workflows/`（GitHub Actions 不识别子目录里的工作流——这是 hard-learned lesson）
-- 工作流将根 `website/`（hub 首页）+ `ban-selection/website/`（方向站点）合并部署
-- 线上 URL 结构：hub 在 `github.io/new_go/`，ban-selection 在 `github.io/new_go/ban-selection/`
-- 改 `ban-selection/website/` 后 push main 即自动部署（~30s）
+- 工作流将根 `website/`（hub 首页）+ `ban-selection/website/`（方向站点）+ `weighted-scoring/website/`（方向站点）合并部署
+- 线上 URL 结构：hub 在 `github.io/new_go/`，ban-selection 在 `github.io/new_go/ban-selection/`，weighted-scoring 在 `github.io/new_go/weighted-scoring/`
+- 改 `ban-selection/website/` 或 `weighted-scoring/website/` 后 push main 即自动部署（~30s）
 
 ## 测试
 
 ```powershell
 cd ban-selection
 $env:PYTHONIOENCODING='utf-8'; python -m pytest test_ban.py -q
+```
+
+```powershell
+cd weighted-scoring
+$env:PYTHONIOENCODING='utf-8'; python -m pytest test_scoring.py test_e2e.py -q --slow
 ```
 
 - PowerShell 下中文输出**必须**先设 `$env:PYTHONIOENCODING='utf-8'`，否则报 cp950 编码错

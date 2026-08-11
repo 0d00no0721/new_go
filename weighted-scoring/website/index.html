@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>加权点目围棋 — KataGo 驱动的围棋变体</title>
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav">
+            <a href="index.html" class="nav-brand">加权点目围棋</a>
+            <button class="nav-toggle" aria-label="菜单">☰</button>
+            <ul class="nav-links">
+                <li><a href="index.html">首页</a></li>
+                <li><a href="rules.html">规则</a></li>
+                <li><a href="heatmap.html">权重热力图</a></li>
+                <li><a href="download.html">下载</a></li>
+                <li><a href="about.html">关于</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <h1>加权点目围棋</h1>
+            <p class="subtitle">KataGo 驱动的围棋变体<span class="sep">·</span>19路<span class="sep">·</span>位置加权分数<span class="sep">·</span>贴目 7.5</p>
+            <div class="hero-cta">
+                <a href="rules.html" class="btn btn-primary btn-large">查看规则</a>
+                <a href="heatmap.html" class="btn btn-secondary btn-large">查看权重热力图</a>
+                <a href="download.html" class="btn btn-primary btn-large">下载</a>
+            </div>
+        </section>
+
+        <section class="features">
+            <div class="feature-card">
+                <h3>位置加权</h3>
+                <p>用位置权重表替代"每点 1 目"：每个棋子和独占空都按其位置权重 W 计值，使各区占领价值趋同，逆转"金角银边草肚皮"。</p>
+            </div>
+            <div class="feature-card">
+                <h3>下天元值得考虑</h3>
+                <p>中央权重高（天元 W=1.72）、角部权重低（星位 W=0.74）。AI 在搜索中响应权重，从"下角"转为"下中"，中央贡献追平角部。</p>
+            </div>
+            <div class="feature-card">
+                <h3>贴目 7.5</h3>
+                <p>加权总分普遍大于 361（ΣW=421.59）。贴目采用标准中国贴目 7.5（标定数据不可信，见收敛报告_komi_utility校准.md §2），保证对局公平。</p>
+            </div>
+            <div class="feature-card">
+                <h3>KataGo AI 对弈</h3>
+                <p>基于 KataGo v1.16.4 源码改造（加权数子 + 搜索集成），支持人 vs AI 与 AI vs AI 对局，附 CLI 与 tkinter GUI。</p>
+            </div>
+        </section>
+
+        <section class="status-summary">
+            <h2>项目状态</h2>
+            <p>迭代收敛，权重表定稿。CLI 对弈工具、tkinter GUI（含热力图叠加）与官网已交付。所有区域的加权占领贡献均收敛至星位 ±15% 以内。</p>
+            <div class="status-badges">
+                <span class="badge badge-ok">迭代收敛 ✅</span>
+                <span class="badge badge-ok">ΣW = 421.59</span>
+                <span class="badge badge-info">W ∈ [0.53, 2.76]</span>
+                <span class="badge badge-ok">贴目 7.5（已定）</span>
+            </div>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-brand">加权点目围棋</div>
+        <p>GitHub 仓库：<a href="https://github.com/0d00no0721/new_go">github.com/0d00no0721/new_go</a></p>
+    </footer>
+
+    <script src="./js/main.js"></script>
+</body>
+</html>

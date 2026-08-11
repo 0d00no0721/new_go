@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>下载 — 加权点目围棋</title>
+    <link rel="stylesheet" href="./css/style.css">
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav">
+            <a href="index.html" class="nav-brand">加权点目围棋</a>
+            <button class="nav-toggle" aria-label="菜单">☰</button>
+            <ul class="nav-links">
+                <li><a href="index.html">首页</a></li>
+                <li><a href="rules.html">规则</a></li>
+                <li><a href="heatmap.html">权重热力图</a></li>
+                <li><a href="download.html">下载</a></li>
+                <li><a href="about.html">关于</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <h1 class="page-title">下载</h1>
+        <p class="page-subtitle">获取加权点目围棋桌面对弈程序</p>
+
+        <section class="download-box">
+            <h3>WeightedGo（CLI + GUI）</h3>
+            <p class="size">Windows 64 位 · 含改造版 KataGo 引擎 + CLI 对弈工具 + tkinter GUI</p>
+            <a href="https://github.com/0d00no0721/new_go/releases" class="btn btn-primary btn-large">前往 GitHub Releases</a>
+            <p class="release-note">解压后需另行下载 KataGo 神经网络权重（约 260 MB），详见下方说明。</p>
+        </section>
+
+        <section>
+            <h2>系统要求</h2>
+            <table>
+                <tr><th>项</th><th>要求</th></tr>
+                <tr><td>操作系统</td><td>Windows 10 / 11 64 位</td></tr>
+                <tr><td>显卡</td><td>OpenCL 兼容 GPU（NVIDIA / AMD / Intel 均可）</td></tr>
+                <tr><td>磁盘空间</td><td>约 50 MB（程序）+ 260 MB（网络权重）</td></tr>
+                <tr><td>网络权重</td><td>需另行下载 KataGo 权重（19 路，如 <a href="https://katagotraining.org/networks/">官方下载</a> 的 28 层网络）</td></tr>
+                <tr><td>Python</td><td>运行 CLI 需 Python 3.10+；GUI 需 tkinter</td></tr>
+            </table>
+        </section>
+
+        <section>
+            <h2>安装步骤</h2>
+            <ol>
+                <li><strong>解压</strong> release 中的 zip 到任意文件夹。</li>
+                <li><strong>下载网络权重</strong>（必须，约 260 MB）：放与 <code>katago.exe</code> 同目录，并在设置中指定路径。</li>
+                <li><strong>确认加权表</strong>：解压包自带 <code>weight_table_final.txt</code>（最终权重表），已配置为默认。</li>
+                <li><strong>GUI</strong>：<code>python gui.py</code>，首次启动弹设置对话框选择引擎/网络权重/加权表与 AI 水平。</li>
+                <li><strong>CLI</strong>：<code>python cli_player.py --mode human</code>，与 AI 对弈一局；或 <code>--mode aivai</code> 观战 AI 对 AI。</li>
+            </ol>
+        </section>
+
+        <section>
+            <h2>CLI 用法</h2>
+            <pre># 人 vs AI（黑先手，默认贴目 7.5，默认加载 weight_table_final.txt）
+python cli_player.py --mode human
+
+# 人执白
+python cli_player.py --mode human --color W
+
+# AI vs AI 观战
+python cli_player.py --mode aivai
+
+# 查询任意点权重（如天元）
+python cli_player.py --query-weight K10
+
+# 复盘 SGF（含加权分）
+python cli_player.py --sgf-in 对局.sgf</pre>
+        </section>
+
+        <section>
+            <h2>配置说明</h2>
+            <p>GUI 设置保存在 <code>settings.json</code>（与脚本/exe 同目录）：</p>
+            <table>
+                <tr><th>参数</th><th>默认</th><th>说明</th></tr>
+                <tr><td><code>engine_path</code></td><td>dist_opencl/katago.exe</td><td>引擎文件路径</td></tr>
+                <tr><td><code>model_path</code></td><td>28b.bin.gz</td><td>网络权重路径（需自行下载）</td></tr>
+                <tr><td><code>config_path</code></td><td>default_gtp.cfg</td><td>引擎配置路径</td></tr>
+                <tr><td><code>weights_path</code></td><td>weight_table_final.txt</td><td>加权表路径</td></tr>
+                <tr><td><code>komi</code></td><td>7.5</td><td>贴目（标准中国贴目）</td></tr>
+                <tr><td><code>maxVisits</code></td><td>800</td><td>KataGo 最大搜索访问数</td></tr>
+                <tr><td><code>maxTime</code></td><td>10.0</td><td>思考时间上限（秒）</td></tr>
+                <tr><td><code>numSearchThreads</code></td><td>20</td><td>搜索线程数（按 GPU 调）</td></tr>
+                <tr><td><code>ponderingEnabled</code></td><td>false</td><td>后台思考（占 GPU）</td></tr>
+                <tr><td><code>game_mode</code></td><td>人vsAI</td><td>人vsAI / AIvsAI / 人vs人</td></tr>
+                <tr><td><code>show_heatmap</code></td><td>false</td><td>GUI 是否叠加权重热力图</td></tr>
+            </table>
+
+            <h3>AI 水平预设</h3>
+            <table>
+                <tr><th>预设</th><th>maxVisits</th><th>maxTime</th><th>numSearchThreads</th></tr>
+                <tr><td>新手</td><td>50</td><td>2.0 秒</td><td>20</td></tr>
+                <tr><td>业余</td><td>800</td><td>10.0 秒</td><td>20</td></tr>
+                <tr><td>高级</td><td>3000</td><td>30.0 秒</td><td>20</td></tr>
+            </table>
+            <p>选择「自定义」可手动填写全部参数。改动后需开始新对局（重启引擎）才生效。</p>
+        </section>
+    </main>
+
+    <footer class="site-footer">
+        <div class="footer-brand">加权点目围棋</div>
+        <p>GitHub 仓库：<a href="https://github.com/0d00no0721/new_go">github.com/0d00no0721/new_go</a></p>
+    </footer>
+
+    <script src="./js/main.js"></script>
+</body>
+</html>

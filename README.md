@@ -8,12 +8,14 @@
 |------|------|------|
 | [`ban-selection/`](./ban-selection/) | Ban 选围棋 | 在 KataGo v1.16.4 上实现 20 路 Ban 选围棋变体（Ban 选阶段 10 禁点 + 正式对局黑贴 4.25 子），含 CLI/GUI 对弈工具 + 静态官网。详见 [`ban-selection/README.md`](./ban-selection/README.md)。 |
 | [`position-value-research/`](./position-value-research/) | 位置价值研究 | 前置研究：用 KataGo analysis 量化 19×19 每位置围空效率，验证金角银边草肚皮。详见 [`position-value-research/README.md`](./position-value-research/README.md)。 |
+| [`weighted-scoring/`](./weighted-scoring/) | 加权点目围棋 | 用位置权重表替代每点 1 目的标准数子（ΣW=421.59），让下天元值得考虑。权重表基于 KataGo 迭代收敛。含 CLI/GUI 对弈 + 静态官网。详见 [`weighted-scoring/README.md`](./weighted-scoring/README.md)。 |
 | _（待补充）_ | _下一个方向_ | _预留_ |
 
 ## 仓库
 
 - GitHub: https://github.com/0d00no0721/new_go
 - 在线对弈（Ban 选）: https://0d00no0721.github.io/new_go/play.html
+- 加权点目（官网）: https://0d00no0721.github.io/new_go/weighted-scoring/
 
 ## 目录结构
 
@@ -29,7 +31,16 @@ new_go/
 │   ├── website/              # 静态官网（GitHub Pages 部署）
 │   ├── katago-src/           # KataGo 改造源码（gitignored）
 │   └── dist_opencl/          # 编译产物（gitignored）
-└── position-value-research/  # 前置研究：位置价值
-    ├── README.md             # 研究报告
-    └── *.py                  # 采集/分析脚本
+├── position-value-research/  # 前置研究：位置价值
+│   ├── README.md             # 研究报告
+│   └── *.py                  # 采集/分析脚本
+└── weighted-scoring/         # 方向三：加权点目围棋
+    ├── README.md             # 发布说明
+    ├── 进度总览.md           # PM 全局视图
+    ├── 加权点目围棋规则.md   # 规则文档
+    ├── *.py                  # scoring/cli/gui/settings/测试
+    ├── website/              # 静态官网（GitHub Pages 部署）
+    ├── weight_table_final.txt# 最终权重表（19×19）
+    ├── katago-src/           # KataGo 改造源码（gitignored）
+    └── dist_opencl/          # 编译产物（gitignored）
 ```
