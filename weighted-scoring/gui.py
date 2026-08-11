@@ -1043,6 +1043,13 @@ class WeightedGoApp:
                 self.eng.send("clear_board")
             except RuntimeError:
                 pass
+            # clear_board 重置 pointWeights 为 1.0，必须重新加载（AGENTS.md 关键坑）
+            try:
+                wpath = self._resolve_path(self.settings.get("weights_path", "weight_table_final.txt"))
+                if os.path.isfile(wpath):
+                    self.eng.load_weights(ascii_safe_copy(wpath))
+            except RuntimeError as e:
+                self.log(f"重新加载权重失败: {e}")
         if self._is_ai_vs_ai() and self._eng_ready:
             self.root.after(500, self._ai_move_async)
 
