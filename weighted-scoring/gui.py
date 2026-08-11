@@ -5,7 +5,7 @@ gui.py — 19路加权点目围棋 GUI（tkinter）
 职责：
   1. 图形化棋盘（19×19 Canvas）+ 人 vs AI / AI vs AI / 人 vs 人
   2. AI 思考实时显示（kata-analyze 流式 → winrate/visits/PV）
-  3. 权重热力图叠加（色阶映射：天元 1.72 亮、星位 0.74 暗）
+  3. 权重热力图叠加（色阶映射：天元 1.72 亮、星位 0.79 暗）
   4. 终局加权分（引擎 final_score + scoring.py 明细）+ SGF 导出
 
 线程模型（严格遵循，否则 tkinter 崩溃）：
@@ -82,7 +82,7 @@ STAR_POINTS = [
 
 
 # ── 权重色阶（diverging colormap）───────────────────────────────────────────
-# W∈[0.53, 2.76]：<1 偏冷蓝、>1 偏暖红、1.0 中性（浅米）。
+# W∈[0.66, 1.97]（D4 对称化后）：<1 偏冷蓝、>1 偏暖红、1.0 中性（浅米）。
 
 def weight_color(w: float) -> tuple[int, int, int]:
     """权重 → RGB（0-255）。以 log2(w) 为色阶基准：w=1→0（中性），w=2→+1（暖端）。"""

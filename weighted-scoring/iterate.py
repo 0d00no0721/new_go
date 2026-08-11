@@ -53,6 +53,26 @@ def avg_ownership(games_data):
     return [s / count for s in own_sums], count
 
 
+def d4_symmetrize(values):
+    """对 19×19 逐位置值做 D4 对称化（8 重对称轨道平均）。
+
+    棋盘 D4 群 = 4 旋转 × 2 镜像 = 8 个对称对应点。逐位置独立采样会因
+    对局噪声/线程非确定性使对称点得到不一致估值，导致权重矩阵不对称。
+    对每个位置的 D4 轨道取算术平均，保证 ΣW 不变（轨道内平均保总量）。
+    """
+    sym = [0.0] * (N * N)
+    for r in range(N):
+        for c in range(N):
+            orbit = {(r, c), (c, N - 1 - r), (N - 1 - r, N - 1 - c),
+                     (N - 1 - c, r), (N - 1 - r, c), (r, N - 1 - c),
+                     (c, r), (N - 1 - c, N - 1 - r)}
+            vals = [values[rr * N + cc] for rr, cc in orbit]
+            avg = sum(vals) / len(vals)
+            for rr, cc in orbit:
+                sym[rr * N + cc] = avg
+    return sym
+
+
 def design_weights(own_avg, clamp_max=3.0, alpha=1.0, target=None, w_old=None, beta=0.5):
     """设计权重表。
     模式 1（无 w_old）: W(P) = clamp((C / |own(P)|)^alpha, 1/clamp_max, clamp_max)
@@ -160,12 +180,17 @@ def main():
         print("[error] 无 ownership 数据", flush=True)
         sys.exit(1)
 
+    # D4 对称化：对局噪声/线程非确定性使对称点估值不一致，先做轨道平均
+    own_avg = d4_symmetrize(own_avg)
+    print("== D4 对称化已应用（8 重轨道平均，Σ 不变）==", flush=True)
+
     # 加载上一轮权重（阻尼模式）
     w_old = None
     if args.w_old:
         with open(args.w_old) as f:
             w_old = [float(x) for x in f.read().split()]
-        print(f"== 阻尼迭代模式（w_old={args.w_old}, beta={args.beta}）==", flush=True)
+        w_old = d4_symmetrize(w_old)  # 旧表也对称化，避免继承历史不对称
+        print(f"== 阻尼迭代模式（w_old={args.w_old}, beta={args.beta}，已对称化）==", flush=True)
 
     print(f"== 基线分析（{n_games} 局平均）==", flush=True)
     print(f"Σ|own| = {sum(own_avg):.2f}  (标准 19路满占≈361)", flush=True)

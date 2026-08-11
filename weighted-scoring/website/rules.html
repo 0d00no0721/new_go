@@ -34,14 +34,14 @@
             <h2>1 权重表</h2>
             <table>
                 <tr><th>位置</th><th>W</th><th>说明</th></tr>
-                <tr><td>星位 D16</td><td>0.74</td><td>角部高效，权重低</td></tr>
+                <tr><td>星位 D16</td><td>0.79</td><td>角部高效，权重低</td></tr>
                 <tr><td>天元 K10</td><td>1.72</td><td>中央低效，权重高（逆转金角银边）</td></tr>
-                <tr><td>一线 A19</td><td>0.76</td><td>一线适度低（不鼓励但不禁止）</td></tr>
-                <tr><td>三线边 K17</td><td>1.13</td><td>边中适度补偿</td></tr>
+                <tr><td>一线 A19</td><td>0.86</td><td>一线适度低（不鼓励但不禁止）</td></tr>
+                <tr><td>三线边 K17</td><td>0.94</td><td>边中适度补偿</td></tr>
             </table>
             <ul>
                 <li><strong>格式</strong>：19×19 row-major 浮点表，第 1 行 = 顶部，第 1 列 = 最左侧。</li>
-                <li><strong>范围</strong>：W ∈ [0.53, 2.76]；<strong>ΣW = 421.59</strong>（标准 19 路 Σ=361）。</li>
+                <li><strong>范围</strong>：W ∈ [0.66, 1.97]（D4 对称化后）；<strong>ΣW = 421.59</strong>（标准 19 路 Σ=361）。</li>
                 <li>ΣW &gt; 361 是设计结果：权重是"价值调节器"，中央被赋 &gt;1 补偿其低占领价值，角部 &lt;1 压低其高效价值，无需归一化。</li>
             </ul>
         </section>
@@ -95,7 +95,7 @@
                 <tr><td>edge34（边中）</td><td>0.47</td><td>−6%</td></tr>
                 <tr><td>low12（一二线）</td><td>0.52</td><td>+4%</td></tr>
             </table>
-            <p>机制：中央位置 W 高（如天元 1.72，占领即得高分），角部 W 低（如星位 0.74，占领得分被压低）。AI 在搜索阶段因 <code>scoreMean += Σ(W−1)×ownership</code> 而响应权重，从而增加中央下法。</p>
+            <p>机制：中央位置 W 高（如天元 1.72，占领即得高分），角部 W 低（如星位 0.79，占领得分被压低）。AI 在搜索阶段因 <code>scoreMean += Σ(W−1)×ownership</code> 而响应权重，从而增加中央下法。</p>
         </section>
 
         <section>

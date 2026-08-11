@@ -77,6 +77,7 @@
 - PowerShell 中文输出需 `$env:PYTHONIOENCODING='utf-8'`
 - GUI 的 AI 落子/分析必须后台线程 + `root.after` 轮询，不能阻塞 tkinter 主线程（`ban-selection/gui.py` 已踩过，直接学其模式）
 - 权重热力图色阶：W∈[0.53, 2.76]，建议 diverging colormap（<1 偏冷、>1 偏暖），1.0 中性
+  > 注：此为原始设计值。权重表后经 D4 对称化，范围收窄至 [0.66, 1.97]（星位 0.79、天元 1.72 不变），见 `收敛报告.md` §4。GUI/website 色阶端点已同步更新。
 - SGF 导出含权重元信息（weights file + komi）
 
 ---

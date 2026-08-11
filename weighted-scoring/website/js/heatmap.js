@@ -162,11 +162,11 @@
         if (!legend) return;
         legend.style.background =
             "linear-gradient(to right, " +
-            weightColor(0.53) + ", " +
-            weightColor(0.75) + ", " +
+            weightColor(0.66) + ", " +
+            weightColor(0.85) + ", " +
             weightColor(1.0) + ", " +
-            weightColor(1.5) + ", " +
-            weightColor(2.76) + ")";
+            weightColor(1.4) + ", " +
+            weightColor(1.97) + ")";
     }
 
     function showSummary() {
