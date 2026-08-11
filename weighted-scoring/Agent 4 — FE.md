@@ -21,6 +21,7 @@
 | 2026-08-10 | ✅ 完成 | komi 7.5 同步 | 应用 NOTIFY_Agent4_komi7.5.md：cli_player.py `DEFAULT_KOMI`、gui.py 5 处默认、settings.py `DEFAULT_SETTINGS["komi"]`、website/ 4 个 HTML，均 8.25→7.5（标准中国贴目）。py_compile + aivai 冒烟验证 `[确认] komi = 7.5`。 |
 | 2026-08-11 | ✅ 完成 | 3D 热力图 | heatmap.html 加 Three.js 3D 柱状图视图，2D/3D 同页切换，复用 weightColor 色阶 |
 | 2026-08-11 | ✅ 完成 | Hub 入口 | 根 website/index.html 加 weighted-scoring 卡片，替换"敬请期待"占位 |
+| 2026-08-11 | ✅ 完成 | gui.py new_game 补重载权重 | `new_game()` 发 `clear_board` 后未重新 `kata-load-weights` → 第 2 局起回退 W=1。已在 clear_board 后补 load_weights（gui.py:1046-1052） |
 
 ---
 

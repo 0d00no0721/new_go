@@ -19,6 +19,7 @@
 | 2026-08-10 | ✅ 完成 | T6 诊断 + 重写 | 根因：6 散孤子有中性空点，isGameFinished 恒 false，final_score 走 NN 估算四舍五入吞掉单点 Δ；tromp-taylor 无效；改用 kata-query-weights 加载正确性（T6a）+ W=1 恒等（T6b） |
 | 2026-08-10 | ✅ 完成 | Komi 决策 | 采用 7.5（标准中国贴目），不采标定数据；真实加权 komi 标定列后续可选研究 |
 | 2026-08-10 | ✅ 完成 | cfg 写入 | gtp_override.cfg 加 `ignoreGTPAndForceKomi = 7.5` |
+| 2026-08-11 | ✅ 完成 | 搜索路径加权修复 | `addCurrentNNOutputAsLeafValue`（searchupdatehelpers.cpp:93）补 `(W-1)×ownership` 调整——原仅 `searchresults.cpp`（报告路径）有调整，MCTS 选点用 W=1；另改 `alwaysIncludeOwnerMap` 固定 true（search.cpp:85 + gtp.cpp:1209/1474）使叶子带 ownerMap。重编译+回归 pytest 19/19（44.57s）+ test_smoke 19/19 + test_weighted_count 15/15 PASS（实测复核 2026-08-11 15:19），AIvsAI PV 已变化（前 20 手含 F17 R3 Q3 S6 C6 D6 D7 E6 等非星位点，非全星位；天元 Q10 未入 PV） |
 
 ---
 

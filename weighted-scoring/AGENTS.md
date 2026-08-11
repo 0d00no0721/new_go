@@ -16,7 +16,9 @@
 |------|------|
 | `board.h`/`board.cpp` | `Board::pointWeights[MAX_ARR_SIZE]` + `setPointWeights`/`resetPointWeights`/`getPointWeight` |
 | `boardhistory.cpp` | 3 处数子 `±1` → `±pointWeights[loc]`，`int`→`double` |
-| `searchresults.cpp:486` | `scoreMean += Σ(W-1)×ownership`（使 AI 搜索响应权重）|
+| `searchresults.cpp:486` | `scoreMean += Σ(W-1)×ownership`（报告路径：日志/analyze 显示值）|
+| `searchupdatehelpers.cpp:93` | `addCurrentNNOutputAsLeafValue` 加 `(W-1)×ownership` 调整（**搜索路径：驱动 MCTS 选点**）|
+| `search.cpp:85` + `gtp.cpp:1209/1474` | `alwaysIncludeOwnerMap` 固定 `true`（叶子需 ownerMap 才能调整）|
 | `gtp.cpp` | 3 条新命令（见下）|
 
 **回归保证**：W≡1 时 `Σown == Σ(W×own)`，数学等价标准 KataGo。
@@ -28,7 +30,7 @@
 
 ## 关键坑（hard-learned）
 
-- **`clear_board` 会重置 `pointWeights` 为 1.0** → 必须先 `clear_board` 再 `kata-load-weights`，顺序反了 `final_score` 回退 W=1。`cli_player.py` 引擎初始化已按此顺序。
+- **`clear_board` 会重置 `pointWeights` 为 1.0** → 必须先 `clear_board` 再 `kata-load-weights`，顺序反了 `final_score` 回退 W=1。`cli_player.py` 引擎初始化已按此顺序；`gui.py` `new_game()` 已在 `clear_board` 后补 `load_weights` 重载（2026-08-11）。
 
 - **`final_score` 对非终局局面返回 NN 估算**（非确定性、四舍五入），不是真实加权数子。确定性对照需用强制终局盘面（如黑整列+白整列+双 pass，令 `isGameFinished=true`）。半整数 komi 下出现和局 = 读到 NN 估算的佐证。
 
@@ -39,6 +41,10 @@
 - **Windows 中文路径致 KataGo `fopen` 失败**：`kata-load-weights` 无法打开 `小工具\` 下的文件。CLI/GUI 用 `ascii_safe_copy()` 复制权重表到 ASCII 临时路径（如 `E:\katago_cache\`）再加载。改加载逻辑时保留此处理。
 
 - **Utility/sqrtBoardArea 未随加权调整**：`scoreMean` 单位是加权目（421.59），但 `scoreStdev`/`sqrtBoardArea` 仍是标准目（361）。偏差 ~1-3% 对黑白对称，不影响 komi 50% 点。**决策：不改 C++**（无单一标量可修正，重编译成本高）。
+
+- **加权调整原误放报告函数**：`searchresults.cpp:486` 的 `scoreMean += Σ(W-1)×ownership` 只改报告值（日志/analyze），不驱动 MCTS 选点。搜索路径 `searchupdatehelpers.cpp` 的 `addCurrentNNOutputAsLeafValue` 漏改 → AI 实际用 W=1 选点，「AI 对 AI 看不出区别」。已在 `addCurrentNNOutputAsLeafValue` 补同样调整（2026-08-11）。
+
+- **`alwaysIncludeOwnerMap` 必须为 `true`**：加权调整依赖叶子节点的 `whiteOwnerMap`，但 `alwaysIncludeOwnerMap` 默认 `false` → genmove 时叶子无 ownerMap，调整被跳过。已改 `search.cpp:85` 默认 `true` + `gtp.cpp:1209/1474` 两处 `false→true`（2026-08-11）。
 
 ## 权重表
 
